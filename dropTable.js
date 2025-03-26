@@ -2,7 +2,7 @@ const { Client } = require("pg");
 
 // Your Neon DB connection string
 const connectionString =
-  "postgresql://FreshLeap_owner:npg_ck3VAKyMrP7N@ep-tight-fire-a1uc0csd-pooler.ap-southeast-1.aws.neon.tech/FreshLeap?sslmode=require";
+  "";
 const client = new Client({
   connectionString: connectionString,
 });

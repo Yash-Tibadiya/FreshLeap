@@ -58,8 +58,9 @@ export default function VerificationEmail({
             <table style={{ width: "100%", textAlign: "center" }}>
               <tr>
                 <td style={logo}>
+                  {/* Changed empty string to null */}
                   <Img
-                    src="" // TODO: add Logo
+                    src="https://freshleap.yash14.me/images/email.jpg" // TODO: add Logo
                     width="64"
                     height="64"
                     alt="FreshLeap"
@@ -75,7 +76,7 @@ export default function VerificationEmail({
           {/* Hero Section with Illustration */}
           <Section style={heroSection}>
             <Img
-              src="/images/email.jpg" // TODO: add Illustration
+              src="https://github.com/Yash-Tibadiya/FreshLeap/blob/main/public/images/email.jpg"
               width="560"
               height="200"
               alt="Verification"
