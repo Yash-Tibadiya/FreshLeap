@@ -1,4 +1,5 @@
 import {
+  boolean,
   integer,
   pgEnum,
   pgTable,
@@ -30,6 +31,9 @@ export const Users = pgTable("users", {
   email: varchar("email", { length: 255 }).unique(),
   password_hash: varchar("password_hash", { length: 255 }),
   role: roleEnum("role"),
+  verifyCode: varchar("verifyCode", { length: 255 }),
+  verifyCodeExpiry: timestamp("verifyCodeExpiry"),
+  isVerified: boolean("isVerified").default(false),
   created_at: timestamp("created_at"),
   updated_at: timestamp("updated_at"),
 });
