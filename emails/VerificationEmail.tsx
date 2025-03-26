@@ -58,9 +58,8 @@ export default function VerificationEmail({
             <table style={{ width: "100%", textAlign: "center" }}>
               <tr>
                 <td style={logo}>
-                  {/* Changed empty string to null */}
                   <Img
-                    src="https://freshleap.yash14.me/images/email.jpg" // TODO: add Logo
+                    src="https://res.cloudinary.com/dwguas7rt/image/upload/v1743003092/ofybibplwdiq2dj7kwcm.png"
                     width="64"
                     height="64"
                     alt="FreshLeap"
@@ -76,7 +75,7 @@ export default function VerificationEmail({
           {/* Hero Section with Illustration */}
           <Section style={heroSection}>
             <Img
-              src="https://github.com/Yash-Tibadiya/FreshLeap/blob/main/public/images/email.jpg"
+              src="https://res.cloudinary.com/dwguas7rt/image/upload/v1743003093/lwsq9phfea8lbhtkbrrg.jpg"
               width="560"
               height="200"
               alt="Verification"
@@ -178,7 +177,7 @@ const logoText = {
   fontSize: "32px",
   fontWeight: "bold",
   marginTop: "15px", // Remove margin around the text
-  color: "#2563eb",
+  color: "#488703",
 };
 
 const divider = {
@@ -234,7 +233,7 @@ const otpCode = {
   fontSize: "32px",
   fontWeight: "bold",
   letterSpacing: "8px",
-  color: "#2563eb",
+  color: "#488703",
   margin: "10px 0",
   padding: "10px 0",
 };
@@ -251,7 +250,7 @@ const ctaSection: { textAlign: Property.TextAlign; margin: string } = {
 };
 
 const button = {
-  backgroundColor: "#2563eb",
+  backgroundColor: "#488703",
   borderRadius: "6px",
   color: "#ffffff",
   fontSize: "16px",
@@ -284,6 +283,6 @@ const footerText = {
 };
 
 const link = {
-  color: "#2563eb",
+  color: "#488703",
   textDecoration: "none",
 };
