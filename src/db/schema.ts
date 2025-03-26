@@ -29,7 +29,7 @@ export const Users = pgTable("users", {
   user_id: uuid("user_id").primaryKey().defaultRandom(),
   username: varchar("username", { length: 255 }).unique(),
   email: varchar("email", { length: 255 }).unique(),
-  password_hash: varchar("password_hash", { length: 255 }),
+  password: varchar("password", { length: 255 }),
   role: roleEnum("role"),
   verifyCode: varchar("verifyCode", { length: 255 }),
   verifyCodeExpiry: timestamp("verifyCodeExpiry"),

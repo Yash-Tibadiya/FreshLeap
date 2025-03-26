@@ -1,5 +1,5 @@
 {
-  "id": "db992573-d834-49cb-9d18-22973aa219a8",
+  "id": "f1edf355-637b-4d96-8df0-7cd4d7c2fa9b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -522,8 +522,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "password_hash": {
-          "name": "password_hash",
+        "password": {
+          "name": "password",
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false
@@ -534,6 +534,25 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
+        },
+        "verifyCode": {
+          "name": "verifyCode",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "verifyCodeExpiry": {
+          "name": "verifyCodeExpiry",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "isVerified": {
+          "name": "isVerified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
