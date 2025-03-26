@@ -12,6 +12,15 @@ const publicRoutes = [
   "/reset-password",
 ];
 
+// Define authentication routes that should redirect to home if user is already logged in
+const authRoutes = [
+  "/sign-up",
+  "/sign-in",
+  "/verify",
+  "/forgot-password",
+  "/reset-password",
+];
+
 // Define routes that require specific roles
 const farmerRoutes = ["/dashboard/farmer", "/products/manage"];
 const customerRoutes = ["/dashboard/customer", "/orders"];
@@ -19,16 +28,21 @@ const customerRoutes = ["/dashboard/customer", "/orders"];
 export default async function middleware(req: NextRequestWithAuth) {
   const pathname = req.nextUrl.pathname;
 
-  // Check if the route is public
-  if (publicRoutes.some((route) => pathname.startsWith(route))) {
-    return NextResponse.next();
-  }
-
   // Get the user's token
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
   });
+
+  // If user is authenticated and trying to access auth routes, redirect to home
+  if (token && authRoutes.some(route => pathname.startsWith(route))) {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
+  // Check if the route is public
+  if (publicRoutes.some((route) => pathname.startsWith(route))) {
+    return NextResponse.next();
+  }
 
   // If no token, redirect to sign-in
   if (!token) {
