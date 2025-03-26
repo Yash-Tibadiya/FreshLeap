@@ -75,7 +75,7 @@ export default function VerificationEmail({
           {/* Hero Section with Illustration */}
           <Section style={heroSection}>
             <Img
-              src="" // TODO: add Illustration
+              src="/images/email.jpg" // TODO: add Illustration
               width="560"
               height="200"
               alt="Verification"
