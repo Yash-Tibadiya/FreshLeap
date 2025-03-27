@@ -89,7 +89,7 @@ const Navbar = () => {
                   </Button>
                   <Button asChild size="sm" className="p-5 bg-green-500">
                     <Link
-                      href={`/dashboard/${session.user.role}/${session.user.name}`}
+                      href={`/dashboard/${session?.user?.role?.toLowerCase()}/${session?.user?.id}`}
                     >
                       <span>Dashboard</span>
                     </Link>
