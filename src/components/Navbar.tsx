@@ -5,8 +5,8 @@ import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-// import { ModeToggle } from "@/components/ModeToggle";
 import Image from "next/image";
+import { CartButton } from "@/components/CartButton";
 
 const Navbar = () => {
   const { data: session } = useSession();
@@ -49,15 +49,14 @@ const Navbar = () => {
           </div>
 
           <div className="bg-background in-data-[state=active]:block lg:in-data-[state=active]:flex mb-6 hidden w-full flex-wrap items-center justify-end space-y-8 rounded-3xl border p-6 shadow-2xl shadow-zinc-300/20 md:flex-nowrap lg:m-0 lg:flex lg:w-fit lg:gap-6 lg:space-y-0 lg:border-transparent lg:bg-transparent lg:p-0 lg:shadow-none dark:shadow-none dark:lg:bg-transparent">
-            {/* ModeToggle for theme switching */}
             <div className="lg:pr-4">
               {session ? (
                 <span className="text-lg font-bold text-gray-200 dark:text-gray-300">
                   Welcome, {session?.user?.name}
                 </span>
               ) : (
-                <div className="flex space-x-3">
-                  {/* <ModeToggle /> */}
+                <div className="flex space-x-3 items-center">
+                  <CartButton />
                   <Button asChild variant="outline" size="sm" className="p-5">
                     <Link href="/sign-in">
                       <span>Login</span>
@@ -75,7 +74,7 @@ const Navbar = () => {
             <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit lg:border-l lg:pl-6">
               {session && (
                 <>
-                  {/* <ModeToggle /> */}
+                  <CartButton />
                   <Button
                     asChild
                     variant="outline"
