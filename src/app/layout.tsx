@@ -4,7 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import AuthProvider from "@/context/AuthProvider";
 import { Toaster } from "@/components/ui/sonner";
-import { CartProvider } from "@/context/CartContext";
+import { StoreInitializer } from "@/components/StoreInitializer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,13 +54,12 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <CartProvider>
-              {children}
-              <Toaster
-                position="bottom-right"
-                toastOptions={toastStyles.toastOptions}
-              />
-            </CartProvider>
+            <StoreInitializer />
+            {children}
+            <Toaster
+              position="bottom-right"
+              toastOptions={toastStyles.toastOptions}
+            />
           </ThemeProvider>
         </AuthProvider>
       </body>

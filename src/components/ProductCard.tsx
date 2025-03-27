@@ -5,7 +5,7 @@ import { ShoppingCart } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useCart } from "@/context/CartContext";
+import { useCartStore } from "@/store/useCartStore";
 
 interface ProductCardProps {
   product: {
@@ -21,7 +21,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { product_id, name, category, description, price, quantity_available, image_url } = product;
-  const { addItem } = useCart();
+  const { addItem } = useCartStore();
   
   const handleAddToCart = () => {
     addItem({
@@ -53,7 +53,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <h3 className="font-semibold text-lg line-clamp-1 text-white">{name}</h3>
         <p className="text-gray-400 text-sm line-clamp-2 mt-1">{description}</p>
         <div className="mt-2 flex items-center justify-between">
-          <span className="font-bold text-lg text-white">${(price / 100).toFixed(2)}</span>
+          <span className="font-bold text-lg text-white">${price.toFixed(2)}</span>
           <span className="text-sm text-gray-400">
             {quantity_available > 0 ? `${quantity_available} available` : "Out of stock"}
           </span>

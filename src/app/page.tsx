@@ -60,44 +60,47 @@ export default async function Home() {
   const products = await getProducts();
   
   return (
-    <div className="flex min-h-screen flex-col bg-black text-white">
+    <div className="relative flex flex-col min-h-screen overflow-hidden transition-colors duration-300 bg-gradient-to-tr from-green-400 to-green-800 dark:bg-gradient-to-tr dark:to-black dark:from-green-900">
       <Navbar />
-      <main className="flex-1 container py-8">
+      <main className="flex-1 container mx-auto py-8">
         <section className="mb-12">
           <h1 className="text-4xl font-bold mb-2">Fresh Products</h1>
           <p className="text-gray-400 mb-8">
-            Browse our selection of fresh, locally-sourced products from farmers near you.
+            Browse our selection of fresh, locally-sourced products from farmers
+            near you.
           </p>
-          
+
           <Suspense fallback={<ProductsLoading />}>
             <ProductsGrid products={products} />
           </Suspense>
         </section>
-        
+
         <section className="py-8">
           <h2 className="text-2xl font-bold mb-6">Categories</h2>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {["Fruits", "Vegetables", "Dairy", "Meat", "Grains"].map((category) => (
-              <div
-                key={category}
-                className="bg-zinc-900 rounded-lg p-6 text-center hover:bg-zinc-800 transition-colors cursor-pointer"
-              >
-                <h3 className="font-medium">{category}</h3>
-              </div>
-            ))}
+            {["Fruits", "Vegetables", "Dairy", "Meat", "Grains"].map(
+              (category) => (
+                <div
+                  key={category}
+                  className="bg-zinc-900 rounded-lg p-6 text-center hover:bg-zinc-800 transition-colors cursor-pointer"
+                >
+                  <h3 className="font-medium">{category}</h3>
+                </div>
+              )
+            )}
           </div>
         </section>
       </main>
-      
+
       <footer className="border-t border-zinc-800 py-6 md:py-8">
-        <div className="container flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-center md:text-left">
             <h3 className="font-bold text-lg">FreshLeap</h3>
             <p className="text-gray-400 text-sm">
               Connecting farmers and consumers directly.
             </p>
           </div>
-          
+
           <div className="text-center md:text-right text-sm text-gray-400">
             <p>© 2025 FreshLeap. All rights reserved.</p>
           </div>
