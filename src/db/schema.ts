@@ -56,6 +56,7 @@ export const Products = pgTable("products", {
   description: varchar("description", { length: 1000 }),
   price: integer("price"),
   quantity_available: integer("quantity_available"),
+  image_url: varchar("image_url", { length: 255 }),
   created_at: timestamp("created_at"),
   updated_at: timestamp("updated_at"),
 });

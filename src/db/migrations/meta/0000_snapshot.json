@@ -1,5 +1,5 @@
 {
-  "id": "f1edf355-637b-4d96-8df0-7cd4d7c2fa9b",
+  "id": "83ad2f9b-d2cd-493b-bc5e-95efd869bffa",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -461,6 +461,12 @@
         "quantity_available": {
           "name": "quantity_available",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false
         },

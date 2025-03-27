@@ -61,6 +61,7 @@ CREATE TABLE "products" (
 	"description" varchar(1000),
 	"price" integer,
 	"quantity_available" integer,
+	"image_url" varchar(255),
 	"created_at" timestamp,
 	"updated_at" timestamp
 );

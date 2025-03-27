@@ -13,6 +13,7 @@ export interface Product {
   description: string;
   price: number;
   quantity_available: number;
+  image_url: string;
   created_at: Date;
   updated_at: Date;
 
