@@ -275,20 +275,71 @@ export default function SignUp() {
                       <FormLabel className="text-gray-700 dark:text-gray-300">
                         I am a
                       </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="bg-white border border-gray-300 rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400">
-                            <SelectValue placeholder="Select your role" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="customer">Customer</SelectItem>
-                          <SelectItem value="farmer">Farmer</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="flex space-x-4 mt-1">
+                        <div
+                          className={`flex-1 py-3 px-4 rounded-lg border cursor-pointer transition-colors ${
+                            field.value === "customer"
+                              ? "bg-blue-50 border-green-500 dark:bg-blue-900/30 dark:border-green-400"
+                              : "bg-white border-gray-300 dark:bg-gray-900 dark:border-gray-700"
+                          }`}
+                          onClick={() => field.onChange("customer")}
+                        >
+                          <div className="flex items-center">
+                            <div
+                              className={`w-5 h-5 rounded-full border flex items-center justify-center mr-3 ${
+                                field.value === "customer"
+                                  ? "border-green-500 dark:border-green-400"
+                                  : "border-gray-400 dark:border-gray-600"
+                              }`}
+                            >
+                              {field.value === "customer" && (
+                                <div className="w-3 h-3 rounded-full bg-green-500 dark:bg-green-400"></div>
+                              )}
+                            </div>
+                            <span
+                              className={`font-medium ${
+                                field.value === "customer"
+                                  ? "text-green-700 dark:text-green-300"
+                                  : "text-gray-700 dark:text-gray-300"
+                              }`}
+                            >
+                              Customer
+                            </span>
+                          </div>
+                        </div>
+
+                        <div
+                          className={`flex-1 py-3 px-4 rounded-lg border cursor-pointer transition-colors ${
+                            field.value === "farmer"
+                              ? "bg-blue-50 border-green-500 dark:bg-blue-900/30 dark:border-green-400"
+                              : "bg-white border-gray-300 dark:bg-gray-900 dark:border-gray-700"
+                          }`}
+                          onClick={() => field.onChange("farmer")}
+                        >
+                          <div className="flex items-center">
+                            <div
+                              className={`w-5 h-5 rounded-full border flex items-center justify-center mr-3 ${
+                                field.value === "farmer"
+                                  ? "border-green-500 dark:border-green-400"
+                                  : "border-gray-400 dark:border-gray-600"
+                              }`}
+                            >
+                              {field.value === "farmer" && (
+                                <div className="w-3 h-3 rounded-full bg-green-500 dark:bg-green-400"></div>
+                              )}
+                            </div>
+                            <span
+                              className={`font-medium ${
+                                field.value === "farmer"
+                                  ? "text-green-700 dark:text-green-300"
+                                  : "text-gray-700 dark:text-gray-300"
+                              }`}
+                            >
+                              Farmer
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                       <FormMessage className="text-red-600 dark:text-red-400" />
                     </FormItem>
                   )}

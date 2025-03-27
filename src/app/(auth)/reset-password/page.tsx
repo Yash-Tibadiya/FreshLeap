@@ -1,9 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import * as z from "zod";
 import Link from "next/link";
-import { z } from "zod";
+import Image from "next/image";
+import { Loader2, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { useRouter, useSearchParams } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 // Form validation schema
 const resetPasswordSchema = z.object({
@@ -19,17 +36,20 @@ export default function ResetPassword() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   
-  const [formData, setFormData] = useState({
-    password: "",
-    confirmPassword: "",
-  });
-  
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [tokenValid, setTokenValid] = useState<boolean | null>(null);
   const [tokenChecking, setTokenChecking] = useState(true);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // Initialize form with react-hook-form and zod validation
+  const form = useForm<z.infer<typeof resetPasswordSchema>>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
   useEffect(() => {
     // Verify token validity when component mounts
@@ -68,47 +88,18 @@ export default function ResetPassword() {
     verifyToken();
   }, [token]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    
-    // Clear error when user types
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onSubmit = async (data: z.infer<typeof resetPasswordSchema>) => {
+    setIsSubmitting(true);
     setApiError(null);
     setSuccess(null);
     
-    // Validate form data
-    try {
-      resetPasswordSchema.parse(formData);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const newErrors: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          if (err.path[0]) {
-            newErrors[err.path[0].toString()] = err.message;
-          }
-        });
-        setErrors(newErrors);
-        return;
-      }
-    }
-    
     if (!token) {
-      setApiError("Reset token is missing. Please request a new password reset link.");
+      toast.error("Reset failed", {
+        description: "Reset token is missing. Please request a new password reset link.",
+      });
+      setIsSubmitting(false);
       return;
     }
-    
-    setIsLoading(true);
     
     try {
       // Send request to reset-password API
@@ -119,20 +110,25 @@ export default function ResetPassword() {
         },
         body: JSON.stringify({
           token,
-          password: formData.password,
+          password: data.password,
         }),
       });
       
-      const data = await response.json();
+      const responseData = await response.json();
       
       if (!response.ok) {
-        setApiError(data.message || "Failed to reset password. Please try again.");
-        setIsLoading(false);
+        toast.error("Reset failed", {
+          description: responseData.message || "Failed to reset password. Please try again.",
+        });
+        setIsSubmitting(false);
         return;
       }
       
       // Successfully reset password
       setSuccess("Your password has been reset successfully! Redirecting to sign in...");
+      toast.success("Password reset", {
+        description: "Your password has been reset successfully!",
+      });
       
       // Redirect to sign-in page after a short delay
       setTimeout(() => {
@@ -140,23 +136,27 @@ export default function ResetPassword() {
       }, 2000);
     } catch (error) {
       console.error("Reset password error:", error);
-      setApiError("An unexpected error occurred. Please try again.");
-      setIsLoading(false);
+      toast.error("Reset failed", {
+        description: "An unexpected error occurred. Please try again.",
+      });
+      setIsSubmitting(false);
     }
   };
 
   // Show loading state while checking token
   if (tokenChecking) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="w-full max-w-md space-y-8 text-center">
-          <div className="animate-pulse">
-            <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-              Verifying reset link...
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              Please wait while we verify your password reset link.
-            </p>
+      <div className="relative flex min-h-screen transition-colors duration-300 bg-white dark:bg-black dark:bg-gradient-to-tr bg-gradient-to-tr from-white to-green-950 dark:from-black dark:to-green-900 overflow-hidden">
+        <div className="flex flex-col items-center justify-center w-full p-4 sm:p-8 md:p-12 z-10">
+          <div className="w-full max-w-md space-y-8 text-center">
+            <div className="animate-pulse">
+              <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+                Verifying reset link...
+              </h2>
+              <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+                Please wait while we verify your password reset link.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -166,21 +166,26 @@ export default function ResetPassword() {
   // Show error if token is invalid
   if (!tokenValid) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="w-full max-w-md space-y-8">
-          <div>
-            <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-              Invalid Reset Link
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              {apiError || "The password reset link is invalid or has expired."}
-            </p>
-          </div>
-          
-          <div className="mt-4 text-center">
-            <Link href="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Request a new password reset link
-            </Link>
+      <div className="relative flex min-h-screen transition-colors duration-300 bg-white dark:bg-black dark:bg-gradient-to-tr bg-gradient-to-tr from-white to-green-950 dark:from-black dark:to-green-900 overflow-hidden">
+        <div className="flex flex-col items-center justify-center w-full p-4 sm:p-8 md:p-12 z-10">
+          <div className="w-full max-w-md space-y-8">
+            <div>
+              <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+                Invalid Reset Link
+              </h2>
+              <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+                {apiError || "The password reset link is invalid or has expired."}
+              </p>
+            </div>
+            
+            <div className="mt-4 text-center">
+              <Link 
+                href="/forgot-password" 
+                className="font-medium text-green-600 hover:text-green-500 dark:text-green-400 dark:hover:text-green-300"
+              >
+                Request a new password reset link
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -188,96 +193,147 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
-      <div className="w-full max-w-md space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            Reset your password
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your new password below.
-          </p>
-        </div>
-        
-        {apiError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-            <span className="block sm:inline">{apiError}</span>
-          </div>
-        )}
-        
-        {success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative" role="alert">
-            <span className="block sm:inline">{success}</span>
-          </div>
-        )}
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                New Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                className={`mt-1 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ${
-                  errors.password ? "ring-red-300" : "ring-gray-300"
-                } focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
-                placeholder="Enter new password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-              )}
+    <>
+      <div className="relative flex min-h-screen transition-colors duration-300 bg-white dark:bg-black dark:bg-gradient-to-tr bg-gradient-to-tr from-white to-green-950 dark:from-black dark:to-green-900 overflow-hidden">
+        {/* Form Content */}
+        <div className="flex flex-col items-start justify-center w-full p-4 sm:p-8 md:p-12 lg:pl-20 lg:pr-0 z-10">
+          <div className="w-full max-w-lg lg:pl-20">
+            <div className="mb-8 space-y-4">
+              <div className="w-16 h-16 mb-2">
+                <Link href="/" aria-label="go home">
+                  <Image
+                    src="/images/logo.png"
+                    alt="FreshLeap"
+                    width={64}
+                    height={64}
+                    className="rounded-md"
+                  />
+                </Link>
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900 md:text-4xl dark:text-white">
+                Reset your password
+              </h1>
+              <p className="text-base text-gray-600 dark:text-gray-400">
+                Enter your new password below.
+              </p>
             </div>
-            
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm New Password
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                className={`mt-1 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ${
-                  errors.confirmPassword ? "ring-red-300" : "ring-gray-300"
-                } focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
-                placeholder="Confirm new password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
-              {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
-              )}
-            </div>
-          </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-indigo-400"
-            >
-              {isLoading ? "Resetting password..." : "Reset Password"}
-            </button>
+            {success && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg dark:bg-green-900/30 dark:border-green-800 dark:text-green-300">
+                <span className="block sm:inline">{success}</span>
+              </div>
+            )}
+
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-5"
+              >
+                <FormField
+                  name="password"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 dark:text-gray-300">
+                        New Password
+                      </FormLabel>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <Lock className="w-5 h-5 text-green-500 dark:text-green-400" />
+                        </div>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="password"
+                            className="pl-10 bg-white border border-gray-300 rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400"
+                            placeholder="Enter new password"
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage className="text-red-600 dark:text-red-400" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  name="confirmPassword"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 dark:text-gray-300">
+                        Confirm New Password
+                      </FormLabel>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <Lock className="w-5 h-5 text-green-500 dark:text-green-400" />
+                        </div>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="password"
+                            className="pl-10 bg-white border border-gray-300 rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400"
+                            placeholder="Confirm new password"
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage className="text-red-600 dark:text-red-400" />
+                    </FormItem>
+                  )}
+                />
+
+                <Button
+                  type="submit"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-black transition-colors mt-2.5"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Resetting password...
+                    </>
+                  ) : (
+                    "Reset Password"
+                  )}
+                </Button>
+              </form>
+            </Form>
+
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Remember your password?{" "}
+                <Link
+                  href="/sign-in"
+                  className="font-medium text-green-600 hover:text-green-500 dark:text-green-400 dark:hover:text-green-300"
+                >
+                  Sign in
+                </Link>
+              </p>
+            </div>
           </div>
-        </form>
-        
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-600">
-            Remember your password?{" "}
-            <Link href="/sign-in" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Sign in
-            </Link>
-          </p>
+        </div>
+
+        {/* Background Image - Positioned to be half-shown/half-hidden */}
+        <div className="absolute top-0 right-0 h-full w-7/10 overflow-hidden hidden lg:block">
+          <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/4 border-[10px] border-gray-400 dark:border-gray-800 rounded-2xl">
+            <Image
+              src="/images/email.jpg"
+              alt="Fresh Farm Produce"
+              width={1920}
+              height={1080}
+              className="rounded-md block dark:hidden"
+              priority
+            />
+            <Image
+              src="/images/email.jpg"
+              alt="Fresh Farm Produce"
+              width={1920}
+              height={1080}
+              className="rounded-md hidden dark:block"
+              priority
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
