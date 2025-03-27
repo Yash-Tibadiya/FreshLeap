@@ -57,13 +57,21 @@ export default async function middleware(req: NextRequestWithAuth) {
   }
 
   // Role-based access control
+  if (token.role === "farmer" && pathname === "/dashboard") {
+    return NextResponse.redirect(new URL(`/dashboard/farmer/${token.name}`, req.url));
+  }
+  
+  if (token.role === "customer" && pathname === "/dashboard") {
+    return NextResponse.redirect(new URL(`/dashboard/customer/${token.name}`, req.url));
+  }
+  
   if (
     farmerRoutes.some((route) => pathname.startsWith(route)) &&
     token.role !== "farmer"
   ) {
     return NextResponse.redirect(new URL("/unauthorized", req.url));
   }
-
+  
   if (
     customerRoutes.some((route) => pathname.startsWith(route)) &&
     token.role !== "customer"

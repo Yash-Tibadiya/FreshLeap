@@ -33,7 +33,7 @@ export default function SignIn() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
 
   // Initialize form with react-hook-form and zod validation
   const form = useForm<z.infer<typeof signInSchema>>({
@@ -162,21 +162,6 @@ export default function SignIn() {
                 />
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <input
-                      id="remember-me"
-                      name="remember-me"
-                      type="checkbox"
-                      className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-600"
-                    />
-                    <label
-                      htmlFor="remember-me"
-                      className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
-                    >
-                      Remember me
-                    </label>
-                  </div>
-
                   <div className="text-sm">
                     <Link
                       href="/forgot-password"
