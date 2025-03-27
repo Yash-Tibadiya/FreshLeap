@@ -1,9 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import * as z from "zod";
 import Link from "next/link";
-import { z } from "zod";
+import Image from "next/image";
+import { Loader2, User, Mail, Lock, MapPin, Phone, Building } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 // Form validation schema
 const signUpSchema = z.object({
@@ -35,72 +60,41 @@ const signUpSchema = z.object({
 );
 
 export default function SignUp() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-  
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    role: "customer" as "farmer" | "customer",
-    farmName: "",
-    farmLocation: "",
-    contactNumber: "",
+
+  // Initialize form with react-hook-form and zod validation
+  const form = useForm<z.infer<typeof signUpSchema>>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      role: "customer",
+      farmName: "",
+      farmLocation: "",
+      contactNumber: "",
+    },
   });
-  
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    
-    // Clear error when user types
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
+  // Get current role value for conditional rendering
+  const role = form.watch("role");
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setApiError(null);
-    
-    // Validate form data
-    try {
-      signUpSchema.parse(formData);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const newErrors: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          if (err.path[0]) {
-            newErrors[err.path[0].toString()] = err.message;
-          }
-        });
-        setErrors(newErrors);
-        return;
-      }
-    }
-    
-    setIsLoading(true);
+  const onSubmit = async (data: z.infer<typeof signUpSchema>) => {
+    setIsSubmitting(true);
     
     try {
       // Prepare data for API
       const apiData = {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        role: formData.role,
-        ...(formData.role === "farmer" && {
-          farmName: formData.farmName,
-          farmLocation: formData.farmLocation,
-          contactNumber: formData.contactNumber,
+        username: data.username,
+        email: data.email,
+        password: data.password,
+        role: data.role,
+        ...(data.role === "farmer" && {
+          farmName: data.farmName,
+          farmLocation: data.farmLocation,
+          contactNumber: data.contactNumber,
         }),
       };
       
@@ -113,230 +107,330 @@ export default function SignUp() {
         body: JSON.stringify(apiData),
       });
       
-      const data = await response.json();
+      const responseData = await response.json();
       
       if (!response.ok) {
-        setApiError(data.message || "Registration failed. Please try again.");
-        setIsLoading(false);
+        toast.error("Registration failed", {
+          description: responseData.message || "Please try again",
+        });
+        setIsSubmitting(false);
         return;
       }
       
       // Successful registration
-      router.push(`/verify/${formData.username}`);
+      toast.success("Account created", {
+        description: "Please verify your email to continue",
+      });
+      
+      // Redirect to verification page
+      router.push(`/verify/${data.username}`);
     } catch (error) {
       console.error("Sign-up error:", error);
-      setApiError("An unexpected error occurred. Please try again.");
-      setIsLoading(false);
+      toast.error("Registration failed", {
+        description: "An unexpected error occurred. Please try again.",
+      });
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
-      <div className="w-full max-w-md space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            Create your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{" "}
-            <Link href="/sign-in" className="font-medium text-indigo-600 hover:text-indigo-500">
-              sign in to your existing account
-            </Link>
-          </p>
-        </div>
-        
-        {apiError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-            <span className="block sm:inline">{apiError}</span>
-          </div>
-        )}
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
-              </label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                autoComplete="username"
-                required
-                className={`mt-1 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ${
-                  errors.username ? "ring-red-300" : "ring-gray-300"
-                } focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
-                value={formData.username}
-                onChange={handleChange}
-              />
-              {errors.username && (
-                <p className="mt-1 text-sm text-red-600">{errors.username}</p>
-              )}
-            </div>
-            
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className={`mt-1 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ${
-                  errors.email ? "ring-red-300" : "ring-gray-300"
-                } focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
-                value={formData.email}
-                onChange={handleChange}
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-              )}
-            </div>
-            
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                className={`mt-1 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ${
-                  errors.password ? "ring-red-300" : "ring-gray-300"
-                } focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
-                value={formData.password}
-                onChange={handleChange}
-              />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-              )}
-            </div>
-            
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                className={`mt-1 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ${
-                  errors.confirmPassword ? "ring-red-300" : "ring-gray-300"
-                } focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
-              {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
-              )}
-            </div>
-            
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                I am a
-              </label>
-              <select
-                id="role"
-                name="role"
-                required
-                className={`mt-1 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ${
-                  errors.role ? "ring-red-300" : "ring-gray-300"
-                } focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
-                value={formData.role}
-                onChange={handleChange}
-              >
-                <option value="customer">Customer</option>
-                <option value="farmer">Farmer</option>
-              </select>
-              {errors.role && (
-                <p className="mt-1 text-sm text-red-600">{errors.role}</p>
-              )}
-            </div>
-            
-            {formData.role === "farmer" && (
-              <div className="space-y-4 border-t border-gray-200 pt-4 mt-4">
-                <h3 className="text-lg font-medium text-gray-900">Farm Details</h3>
-                
-                <div>
-                  <label htmlFor="farmName" className="block text-sm font-medium text-gray-700">
-                    Farm Name
-                  </label>
-                  <input
-                    id="farmName"
-                    name="farmName"
-                    type="text"
-                    required={formData.role === "farmer"}
-                    className={`mt-1 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ${
-                      errors.farmName ? "ring-red-300" : "ring-gray-300"
-                    } focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
-                    value={formData.farmName}
-                    onChange={handleChange}
+    <>
+      <div className="relative flex min-h-screen transition-colors duration-300 bg-white dark:bg-black dark:bg-gradient-to-tr bg-gradient-to-tr from-white to-green-950 dark:from-black dark:to-green-900 overflow-hidden">
+        {/* Form Content */}
+        <div className="flex flex-col items-start justify-center w-full p-4 sm:p-8 md:p-12 lg:pl-20 lg:pr-0 z-10">
+          <div className="w-full max-w-lg lg:pl-20">
+            <div className="mb-8 space-y-4">
+              <div className="w-16 h-16 mb-2">
+                <Link href="/" aria-label="go home">
+                  <Image
+                    src="/images/logo.png"
+                    alt="FreshLeap"
+                    width={64}
+                    height={64}
+                    className="rounded-md"
                   />
-                  {errors.farmName && (
-                    <p className="mt-1 text-sm text-red-600">{errors.farmName}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <label htmlFor="farmLocation" className="block text-sm font-medium text-gray-700">
-                    Farm Location
-                  </label>
-                  <input
-                    id="farmLocation"
-                    name="farmLocation"
-                    type="text"
-                    required={formData.role === "farmer"}
-                    className={`mt-1 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ${
-                      errors.farmLocation ? "ring-red-300" : "ring-gray-300"
-                    } focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
-                    value={formData.farmLocation}
-                    onChange={handleChange}
-                  />
-                  {errors.farmLocation && (
-                    <p className="mt-1 text-sm text-red-600">{errors.farmLocation}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <label htmlFor="contactNumber" className="block text-sm font-medium text-gray-700">
-                    Contact Number
-                  </label>
-                  <input
-                    id="contactNumber"
-                    name="contactNumber"
-                    type="tel"
-                    required={formData.role === "farmer"}
-                    className={`mt-1 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ${
-                      errors.contactNumber ? "ring-red-300" : "ring-gray-300"
-                    } focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
-                    value={formData.contactNumber}
-                    onChange={handleChange}
-                  />
-                  {errors.contactNumber && (
-                    <p className="mt-1 text-sm text-red-600">{errors.contactNumber}</p>
-                  )}
-                </div>
+                </Link>
               </div>
-            )}
-          </div>
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900 md:text-4xl dark:text-white">
+                Join FreshLeap!
+              </h1>
+              <p className="text-base text-gray-600 dark:text-gray-400">
+                Sign up to start your fresh food journey
+              </p>
+            </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-indigo-400"
-            >
-              {isLoading ? "Creating account..." : "Sign up"}
-            </button>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-5"
+              >
+                <FormField
+                  name="username"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 dark:text-gray-300">
+                        Username
+                      </FormLabel>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <User className="w-5 h-5 text-green-500 dark:text-green-400" />
+                        </div>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            className="pl-10 bg-white border border-gray-300 rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400"
+                            placeholder="Username"
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage className="text-red-600 dark:text-red-400" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  name="email"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 dark:text-gray-300">
+                        Email
+                      </FormLabel>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <Mail className="w-5 h-5 text-green-500 dark:text-green-400" />
+                        </div>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="email"
+                            className="pl-10 bg-white border border-gray-300 rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400"
+                            placeholder="Email address"
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage className="text-red-600 dark:text-red-400" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  name="password"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 dark:text-gray-300">
+                        Password
+                      </FormLabel>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <Lock className="w-5 h-5 text-green-500 dark:text-green-400" />
+                        </div>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="password"
+                            className="pl-10 bg-white border border-gray-300 rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400"
+                            placeholder="Password"
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage className="text-red-600 dark:text-red-400" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  name="confirmPassword"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 dark:text-gray-300">
+                        Confirm Password
+                      </FormLabel>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <Lock className="w-5 h-5 text-green-500 dark:text-green-400" />
+                        </div>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="password"
+                            className="pl-10 bg-white border border-gray-300 rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400"
+                            placeholder="Confirm password"
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage className="text-red-600 dark:text-red-400" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  name="role"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 dark:text-gray-300">
+                        I am a
+                      </FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="bg-white border border-gray-300 rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400">
+                            <SelectValue placeholder="Select your role" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="customer">Customer</SelectItem>
+                          <SelectItem value="farmer">Farmer</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage className="text-red-600 dark:text-red-400" />
+                    </FormItem>
+                  )}
+                />
+
+                {role === "farmer" && (
+                  <div className="space-y-4 border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                      Farm Details
+                    </h3>
+
+                    <FormField
+                      name="farmName"
+                      control={form.control}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 dark:text-gray-300">
+                            Farm Name
+                          </FormLabel>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                              <Building className="w-5 h-5 text-green-500 dark:text-green-400" />
+                            </div>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                className="pl-10 bg-white border border-gray-300 rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400"
+                                placeholder="Farm name"
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage className="text-red-600 dark:text-red-400" />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      name="farmLocation"
+                      control={form.control}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 dark:text-gray-300">
+                            Farm Location
+                          </FormLabel>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                              <MapPin className="w-5 h-5 text-green-500 dark:text-green-400" />
+                            </div>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                className="pl-10 bg-white border border-gray-300 rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400"
+                                placeholder="Farm location"
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage className="text-red-600 dark:text-red-400" />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      name="contactNumber"
+                      control={form.control}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 dark:text-gray-300">
+                            Contact Number
+                          </FormLabel>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                              <Phone className="w-5 h-5 text-green-500 dark:text-green-400" />
+                            </div>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                type="tel"
+                                className="pl-10 bg-white border border-gray-300 rounded-lg dark:bg-gray-900 dark:border-gray-700 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400"
+                                placeholder="Contact number"
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage className="text-red-600 dark:text-red-400" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-black transition-colors mt-2.5"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    "Sign Up"
+                  )}
+                </Button>
+              </form>
+            </Form>
+
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Already have an account?{" "}
+                <Link
+                  href="/sign-in"
+                  className="font-medium text-green-600 hover:text-green-500 dark:text-green-400 dark:hover:text-green-300"
+                >
+                  Sign in
+                </Link>
+              </p>
+            </div>
           </div>
-        </form>
+        </div>
+
+        {/* Background Image - Positioned to be half-shown/half-hidden */}
+        <div className="absolute top-0 right-0 h-full w-7/10 overflow-hidden hidden lg:block">
+          <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/4 border-[10px] border-gray-400 dark:border-gray-800 rounded-2xl">
+            <Image
+              src="/images/email.jpg"
+              alt="Fresh Farm Produce"
+              width={1920}
+              height={1080}
+              className="rounded-md block dark:hidden"
+              priority
+            />
+            <Image
+              src="/images/email.jpg"
+              alt="Fresh Farm Produce"
+              width={1920}
+              height={1080}
+              className="rounded-md hidden dark:block"
+              priority
+            />
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
