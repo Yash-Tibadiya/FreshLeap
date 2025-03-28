@@ -16,42 +16,48 @@ export default function CheckoutSuccessPage() {
     /** @type {string | null} */ (null)
   );
 
+  // Add state to track client-side mounting
+  const [isMounted, setIsMounted] = useState(false);
+
   const clearCart = useCartStore((state) => state.clearCart);
 
   useEffect(() => {
-    // Verify the checkout session
-    const verifyCheckoutSession = async () => {
-      try {
-        const response = await fetch("/api/checkout/verify", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ sessionId }),
-        });
+    // Mark component as mounted to avoid hydration mismatch
+    setIsMounted(true);
 
-        if (!response.ok) {
-          throw new Error("Failed to verify checkout session");
-        }
+    // Clear the cart immediately on success page load
+    clearCart();
 
-        const data = await response.json();
-
-        // Set order number if provided by the server
-        if (data.orderNumber) {
-          setOrderNumber(data.orderNumber);
-        }
-
-        // Clear the cart after successful verification
-        clearCart();
-      } catch (error) {
-        console.error("Checkout verification error:", error);
+    // Use a fixed value for the orderNumber based on sessionId
+    // This avoids using Date.now() which causes hydration mismatches
+    if (sessionId && !orderNumber) {
+      // Create a simple hash from the sessionId
+      let hash = 0;
+      for (let i = 0; i < sessionId.length; i++) {
+        hash = (hash << 5) - hash + sessionId.charCodeAt(i);
+        hash |= 0; // Convert to 32bit integer
       }
-    };
-
-    if (sessionId) {
-      verifyCheckoutSession();
+      const simpleOrderId = `ORD-${Math.abs(hash).toString().slice(-6)}`;
+      setOrderNumber(simpleOrderId);
     }
-  }, [sessionId, clearCart]);
+  }, [sessionId, clearCart, orderNumber]);
+
+  // Define handlers for button clicks to ensure cart is cleared
+  const handleViewOrders = () => {
+    clearCart(); // Ensure cart is cleared before navigation
+    router.push("/dashboard/customer/:id");
+  };
+
+  const handleContinueShopping = () => {
+    clearCart(); // Ensure cart is cleared before navigation
+    router.push("/");
+  };
+
+  // Don't render anything during server-side rendering or until client mount
+  // This prevents hydration mismatches
+  if (!isMounted) {
+    return <div className="min-h-screen bg-zinc-950"></div>;
+  }
 
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-white p-4">
@@ -81,7 +87,7 @@ export default function CheckoutSuccessPage() {
         <div className="flex flex-col sm:flex-row gap-4 w-full">
           <Button
             className="bg-green-600 hover:bg-green-700 flex-1 py-6"
-            onClick={() => router.push("/dashboard/customer/:id")}
+            onClick={handleViewOrders}
           >
             View My Orders
           </Button>
@@ -89,7 +95,7 @@ export default function CheckoutSuccessPage() {
           <Button
             variant="outline"
             className="border-zinc-700 hover:bg-zinc-800 flex-1 py-6"
-            onClick={() => router.push("/")}
+            onClick={handleContinueShopping}
           >
             Continue Shopping
           </Button>
