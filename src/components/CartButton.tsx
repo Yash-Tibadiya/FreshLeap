@@ -15,19 +15,128 @@ import { Separator } from "@/components/ui/separator";
 import { useCartStore } from "@/store/useCartStore";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+
+// Initialize Stripe with the publishable key
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+);
 
 export function CartButton() {
   // Use useState for client-side rendering to avoid hydration mismatch
   const [mounted, setMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Get cart state and actions from Zustand store
-  const { items, itemCount, totalPrice, updateQuantity, removeItem } =
-    useCartStore();
+  const {
+    items,
+    itemCount,
+    totalPrice,
+    updateQuantity,
+    removeItem,
+    clearCart,
+  } = useCartStore();
 
   // Handle hydration mismatch by only rendering after component mounts
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleCheckout = async () => {
+    try {
+      setIsLoading(true);
+
+      // Optional: Add network connection check
+      if (!navigator.onLine) {
+        throw new Error("No internet connection. Please check your network.");
+      }
+
+      const lineItems = items.map((item) => {
+        let imageUrl = null;
+        if (item.image_url && item.image_url.startsWith("/product-data/")) {
+          imageUrl = `${window.location.origin}${item.image_url}`;
+        }
+
+        return {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: item.name,
+              ...(imageUrl && { images: [imageUrl] }),
+            },
+            unit_amount: Math.round(item.price * 100), // Ensure whole number of cents
+          },
+          quantity: item.quantity,
+        };
+      });
+
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          lineItems,
+          // Optionally add more metadata
+          metadata: {
+            // Example: add timestamp or unique order identifier
+            timestamp: new Date().toISOString(),
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+
+        // More specific error handling
+        switch (response.status) {
+          case 400:
+            throw new Error(
+              "Invalid checkout request. Please check your cart."
+            );
+          case 403:
+            throw new Error("Authentication required to complete checkout.");
+          case 500:
+            throw new Error("Server error. Please try again later.");
+          default:
+            throw new Error(
+              `Checkout failed: ${errorData.message || "Unknown server error"}`
+            );
+        }
+      }
+
+      const data = await response.json();
+      const stripe = await stripePromise;
+
+      if (!stripe) {
+        throw new Error("Payment processing is temporarily unavailable.");
+      }
+
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: data.sessionId,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Attempt to clear cart before redirecting
+      clearCart();
+    } catch (error: any) {
+      console.error("Checkout process error:", error);
+
+      // More user-friendly error messaging
+      const errorMessage = error.message.includes("network")
+        ? "Network error. Please check your internet connection."
+        : error.message.includes("Authentication")
+          ? "Please log in to complete your purchase."
+          : "We couldn't complete your checkout. Please try again.";
+
+      alert(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Don't render anything until after hydration to avoid mismatch
   if (!mounted) {
@@ -137,8 +246,12 @@ export function CartButton() {
                 <span>Total</span>
                 <span>${totalPrice.toFixed(2)}</span>
               </div>
-              <Button className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-base font-semibold rounded-sm transition-colors">
-                Checkout
+              <Button
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-base font-semibold rounded-sm transition-colors"
+                onClick={handleCheckout}
+                disabled={isLoading}
+              >
+                {isLoading ? "Processing..." : "Checkout"}
               </Button>
             </>
           ) : (
