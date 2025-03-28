@@ -11,9 +11,6 @@ import {
 } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  BarChart,
-  LineChart,
-  PieChart,
   Package,
   ShoppingCart,
   Users as UsersIcon,
