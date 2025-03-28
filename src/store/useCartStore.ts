@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
 type CartItem = {
+  description: undefined;
   product_id: string;
   name: string;
   price: number;

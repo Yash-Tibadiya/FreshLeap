@@ -22,10 +22,18 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 );
 
+// Import UUID
+import { v4 as uuidv4 } from "uuid";
+// Import NextAuth session hook
+import { useSession } from "next-auth/react";
+
 export function CartButton() {
   // Use useState for client-side rendering to avoid hydration mismatch
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Get NextAuth session
+  const { data: session } = useSession();
 
   // Get cart state and actions from Zustand store
   const {
@@ -51,10 +59,16 @@ export function CartButton() {
         throw new Error("No internet connection. Please check your network.");
       }
 
+      // Prepare line items for Stripe
       const lineItems = items.map((item) => {
+        // Make sure image URLs are absolute
         let imageUrl = null;
-        if (item.image_url && item.image_url.startsWith("/product-data/")) {
-          imageUrl = `${window.location.origin}${item.image_url}`;
+        if (item.image_url) {
+          if (item.image_url.startsWith("/")) {
+            imageUrl = `${window.location.origin}${item.image_url}`;
+          } else {
+            imageUrl = item.image_url;
+          }
         }
 
         return {
@@ -62,14 +76,29 @@ export function CartButton() {
             currency: "usd",
             product_data: {
               name: item.name,
+              description: item.description || undefined,
               ...(imageUrl && { images: [imageUrl] }),
             },
-            unit_amount: Math.round(item.price * 100), // Ensure whole number of cents
+            unit_amount: Math.round(item.price * 100), // Convert to cents
           },
           quantity: item.quantity,
         };
       });
 
+      // Get user ID from session or generate one for guests
+      let userId;
+      if (
+        session?.user?.id &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          session.user.id
+        )
+      ) {
+        userId = session.user.id;
+      } else {
+        userId = uuidv4();
+      }
+
+      // Make API request to create checkout session
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: {
@@ -77,32 +106,25 @@ export function CartButton() {
         },
         body: JSON.stringify({
           lineItems,
-          // Optionally add more metadata
           metadata: {
-            // Example: add timestamp or unique order identifier
+            userId,
             timestamp: new Date().toISOString(),
+            cartItems: JSON.stringify(
+              items.map((item) => ({
+                id: item.product_id,
+                name: item.name,
+                quantity: item.quantity,
+              }))
+            ),
           },
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-
-        // More specific error handling
-        switch (response.status) {
-          case 400:
-            throw new Error(
-              "Invalid checkout request. Please check your cart."
-            );
-          case 403:
-            throw new Error("Authentication required to complete checkout.");
-          case 500:
-            throw new Error("Server error. Please try again later.");
-          default:
-            throw new Error(
-              `Checkout failed: ${errorData.message || "Unknown server error"}`
-            );
-        }
+        throw new Error(
+          `Checkout failed: ${errorData.message || "Unknown error"}`
+        );
       }
 
       const data = await response.json();
@@ -112,6 +134,7 @@ export function CartButton() {
         throw new Error("Payment processing is temporarily unavailable.");
       }
 
+      // Redirect to Stripe checkout
       const { error } = await stripe.redirectToCheckout({
         sessionId: data.sessionId,
       });
@@ -120,19 +143,11 @@ export function CartButton() {
         throw error;
       }
 
-      // Attempt to clear cart before redirecting
+      // Attempt to clear cart before redirecting (though redirect happens immediately)
       clearCart();
     } catch (error: any) {
       console.error("Checkout process error:", error);
-
-      // More user-friendly error messaging
-      const errorMessage = error.message.includes("network")
-        ? "Network error. Please check your internet connection."
-        : error.message.includes("Authentication")
-          ? "Please log in to complete your purchase."
-          : "We couldn't complete your checkout. Please try again.";
-
-      alert(errorMessage);
+      alert(error.message || "An error occurred during checkout");
     } finally {
       setIsLoading(false);
     }

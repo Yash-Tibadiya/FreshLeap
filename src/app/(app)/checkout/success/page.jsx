@@ -11,12 +11,12 @@ export default function CheckoutSuccessPage() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
 
-  // Use JSDoc type annotation for .jsx files
+  // State management
   const [orderNumber, setOrderNumber] = useState(
     /** @type {string | null} */ (null)
   );
-
-  // Add state to track client-side mounting
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isMounted, setIsMounted] = useState(false);
 
   const clearCart = useCartStore((state) => state.clearCart);
@@ -28,33 +28,62 @@ export default function CheckoutSuccessPage() {
     // Clear the cart immediately on success page load
     clearCart();
 
-    // Use a fixed value for the orderNumber based on sessionId
-    // This avoids using Date.now() which causes hydration mismatches
-    if (sessionId && !orderNumber) {
-      // Create a simple hash from the sessionId
-      let hash = 0;
-      for (let i = 0; i < sessionId.length; i++) {
-        hash = (hash << 5) - hash + sessionId.charCodeAt(i);
-        hash |= 0; // Convert to 32bit integer
-      }
-      const simpleOrderId = `ORD-${Math.abs(hash).toString().slice(-6)}`;
-      setOrderNumber(simpleOrderId);
+    // Only proceed if we have a session ID
+    if (sessionId) {
+      // Verify payment with backend and create order
+      verifyPaymentAndCreateOrder(sessionId);
+    } else {
+      setIsLoading(false);
+      setError("No session ID found. Unable to verify your order.");
     }
-  }, [sessionId, clearCart, orderNumber]);
+  }, [sessionId, clearCart]);
 
-  // Define handlers for button clicks to ensure cart is cleared
+  // Function to verify payment with backend and create the order
+  const verifyPaymentAndCreateOrder = async (sessionId) => {
+    try {
+      // Call the verification endpoint
+      const response = await fetch(`/api/checkout?session_id=${sessionId}`);
+
+      if (!response.ok) {
+        throw new Error(`Verification failed with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Set the order number from the response
+      if (data.orderNumber) {
+        setOrderNumber(data.orderNumber);
+      } else if (data.order && data.order.order_id) {
+        setOrderNumber(data.order.order_id);
+      } else {
+        // Fallback if no order data returned
+        const simpleOrderId = `ORD-${Math.abs(
+          parseInt(sessionId.substring(0, 8), 16)
+        )
+          .toString()
+          .slice(-6)}`;
+        setOrderNumber(simpleOrderId);
+      }
+    } catch (err) {
+      console.error("Error verifying payment:", err);
+      setError(
+        "There was an issue verifying your payment. Please contact support."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Define handlers for button clicks
   const handleViewOrders = () => {
-    clearCart(); // Ensure cart is cleared before navigation
     router.push("/dashboard/customer/:id");
   };
 
   const handleContinueShopping = () => {
-    clearCart(); // Ensure cart is cleared before navigation
     router.push("/");
   };
 
   // Don't render anything during server-side rendering or until client mount
-  // This prevents hydration mismatches
   if (!isMounted) {
     return <div className="min-h-screen bg-zinc-950"></div>;
   }
@@ -62,44 +91,65 @@ export default function CheckoutSuccessPage() {
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-white p-4">
       <div className="max-w-md w-full bg-zinc-900 rounded-lg p-8 flex flex-col items-center text-center">
-        <div className="rounded-full bg-green-600/20 p-4 mb-6">
-          <CheckCircle className="h-12 w-12 text-green-500" />
-        </div>
+        {isLoading ? (
+          <div className="flex flex-col items-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mb-4"></div>
+            <p>Verifying your payment...</p>
+          </div>
+        ) : error ? (
+          <div className="text-red-400 py-6">
+            <p className="text-xl font-bold mb-4">Payment Verification Issue</p>
+            <p>{error}</p>
+            <Button
+              className="mt-6 bg-zinc-800 hover:bg-zinc-700"
+              onClick={handleContinueShopping}
+            >
+              Return to Shop
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div className="rounded-full bg-green-600/20 p-4 mb-6">
+              <CheckCircle className="h-12 w-12 text-green-500" />
+            </div>
 
-        <h1 className="text-2xl font-bold mb-3">Payment Successful!</h1>
+            <h1 className="text-2xl font-bold mb-3">Payment Successful!</h1>
 
-        <p className="text-lg mb-6">
-          Thank you for your purchase. Your order has been placed successfully.
-        </p>
+            <p className="text-lg mb-6">
+              Thank you for your purchase. Your order has been placed
+              successfully.
+            </p>
 
-        {orderNumber && (
-          <p className="bg-zinc-800 py-2 px-4 rounded-md mb-6">
-            Order ID:{" "}
-            <span className="font-mono font-medium">{orderNumber}</span>
-          </p>
+            {orderNumber && (
+              <p className="bg-zinc-800 py-2 px-4 rounded-md mb-6">
+                Order ID:{" "}
+                <span className="font-mono font-medium">{orderNumber}</span>
+              </p>
+            )}
+
+            <p className="text-zinc-400 text-sm mb-8">
+              You will receive an email confirmation shortly with your order
+              details.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 w-full">
+              <Button
+                className="bg-green-600 hover:bg-green-700 flex-1 py-6"
+                onClick={handleViewOrders}
+              >
+                View My Orders
+              </Button>
+
+              <Button
+                variant="outline"
+                className="border-zinc-700 hover:bg-zinc-800 flex-1 py-6"
+                onClick={handleContinueShopping}
+              >
+                Continue Shopping
+              </Button>
+            </div>
+          </>
         )}
-
-        <p className="text-zinc-400 text-sm mb-8">
-          You will receive an email confirmation shortly with your order
-          details.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-4 w-full">
-          <Button
-            className="bg-green-600 hover:bg-green-700 flex-1 py-6"
-            onClick={handleViewOrders}
-          >
-            View My Orders
-          </Button>
-
-          <Button
-            variant="outline"
-            className="border-zinc-700 hover:bg-zinc-800 flex-1 py-6"
-            onClick={handleContinueShopping}
-          >
-            Continue Shopping
-          </Button>
-        </div>
       </div>
     </div>
   );
