@@ -51,9 +51,11 @@ const Navbar = () => {
           <div className="bg-background in-data-[state=active]:block lg:in-data-[state=active]:flex mb-6 hidden w-full flex-wrap items-center justify-end space-y-8 rounded-3xl border p-6 shadow-2xl shadow-zinc-300/20 md:flex-nowrap lg:m-0 lg:flex lg:w-fit lg:gap-6 lg:space-y-0 lg:border-transparent lg:bg-transparent lg:p-0 lg:shadow-none dark:shadow-none dark:lg:bg-transparent">
             <div className="lg:pr-4">
               {session ? (
-                <span className="text-lg font-bold text-gray-200 dark:text-gray-300">
-                  Welcome, {session?.user?.name}
-                </span>
+                <div className="flex items-center space-x-3">
+                  <span className="text-lg font-bold text-gray-200 dark:text-gray-300">
+                    Welcome, {session?.user?.name}
+                  </span>
+                </div>
               ) : (
                 <div className="flex space-x-3 items-center">
                   <CartButton />
@@ -74,25 +76,37 @@ const Navbar = () => {
             <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit lg:border-l lg:pl-6">
               {session && (
                 <>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="p-5 bg-input/10 text-white"
+                  >
+                    <Link href="/orders">
+                      <span>My Orders</span>
+                    </Link>
+                  </Button>
                   <CartButton />
                   <Button
                     asChild
                     variant="outline"
                     size="sm"
-                    className="p-5 bg-input/10  text-white"
+                    className="p-5 bg-input/10 text-white"
                     onClick={() => signOut()}
                   >
                     <Link href="/sign-in">
                       <span>Logout</span>
                     </Link>
                   </Button>
-                  <Button asChild size="sm" className="p-5 bg-green-500">
-                    <Link
-                      href={`/dashboard/${session?.user?.role?.toLowerCase()}/${session?.user?.id}`}
-                    >
-                      <span>Dashboard</span>
-                    </Link>
-                  </Button>
+                  {session?.user?.role?.toLowerCase() !== "customer" && (
+                    <Button asChild size="sm" className="p-5 bg-green-500">
+                      <Link
+                        href={`/dashboard/${session?.user?.role?.toLowerCase()}/${session?.user?.id}`}
+                      >
+                        <span>Dashboard</span>
+                      </Link>
+                    </Button>
+                  )}
                 </>
               )}
             </div>

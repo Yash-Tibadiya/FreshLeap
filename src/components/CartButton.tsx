@@ -16,6 +16,7 @@ import { useCartStore } from "@/store/useCartStore";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
+import { useRouter } from "next/navigation";
 
 // Initialize Stripe with the publishable key
 const stripePromise = loadStripe(
@@ -31,6 +32,7 @@ export function CartButton() {
   // Use useState for client-side rendering to avoid hydration mismatch
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   // Get NextAuth session
   const { data: session } = useSession();
@@ -52,6 +54,12 @@ export function CartButton() {
 
   const handleCheckout = async () => {
     try {
+      // Redirect to sign-in if not logged in
+      if (!session) {
+        router.push("/sign-in");
+        return;
+      }
+
       setIsLoading(true);
 
       // Optional: Add network connection check
@@ -153,6 +161,14 @@ export function CartButton() {
     }
   };
 
+  // Function to handle cart button click
+  const handleCartButtonClick = (e: React.MouseEvent) => {
+    if (!session) {
+      e.preventDefault();
+      router.push("/sign-in");
+    }
+  };
+
   // Don't render anything until after hydration to avoid mismatch
   if (!mounted) {
     return (
@@ -173,6 +189,7 @@ export function CartButton() {
           variant="outline"
           size="icon"
           className="relative bg-zinc-800 border-zinc-700 hover:bg-zinc-700 p-5"
+          onClick={handleCartButtonClick}
         >
           <ShoppingCart className="h-5 w-5 text-white" />
           {itemCount > 0 && (
