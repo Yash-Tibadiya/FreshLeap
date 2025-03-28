@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/index";
 import { Farmers, Products, Users, Orders, OrderItems } from "@/db/schema";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq} from "drizzle-orm";
 
 export async function GET(
   request: NextRequest,
