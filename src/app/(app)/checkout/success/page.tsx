@@ -5,18 +5,19 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/store/useCartStore";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 export default function CheckoutSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
   const sessionId = searchParams.get("session_id");
 
   // State management
-  const [orderNumber, setOrderNumber] = useState(
-    /** @type {string | null} */ (null)
-  );
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
   const clearCart = useCartStore((state) => state.clearCart);
@@ -39,7 +40,7 @@ export default function CheckoutSuccessPage() {
   }, [sessionId, clearCart]);
 
   // Function to verify payment with backend and create the order
-  const verifyPaymentAndCreateOrder = async (sessionId) => {
+  const verifyPaymentAndCreateOrder = async (sessionId: any) => {
     try {
       // Call the verification endpoint
       const response = await fetch(`/api/checkout?session_id=${sessionId}`);
@@ -72,11 +73,6 @@ export default function CheckoutSuccessPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Define handlers for button clicks
-  const handleViewOrders = () => {
-    router.push("/dashboard/customer/:id");
   };
 
   const handleContinueShopping = () => {
@@ -133,11 +129,10 @@ export default function CheckoutSuccessPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 w-full">
-              <Button
-                className="bg-green-600 hover:bg-green-700 flex-1 py-6"
-                onClick={handleViewOrders}
-              >
-                View My Orders
+              <Button className="bg-green-600 hover:bg-green-700 flex-1 py-6">
+                <Link href={`/orders/${session?.user?.id}`}>
+                  View My Orders
+                </Link>
               </Button>
 
               <Button

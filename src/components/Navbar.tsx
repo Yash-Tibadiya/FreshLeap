@@ -82,7 +82,7 @@ const Navbar = () => {
                     size="sm"
                     className="p-5 bg-input/10 text-white"
                   >
-                    <Link href="/orders">
+                    <Link href={`/orders/${session?.user?.id}`}>
                       <span>My Orders</span>
                     </Link>
                   </Button>

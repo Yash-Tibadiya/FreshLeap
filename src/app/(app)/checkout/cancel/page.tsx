@@ -28,7 +28,7 @@ export default function CheckoutCancelPage() {
         <div className="flex flex-col sm:flex-row gap-4 w-full">
           <Button
             className="bg-green-600 hover:bg-green-700 flex-1 py-6"
-            onClick={() => router.push("/cart")}
+            onClick={() => router.push("/")}
           >
             Return to Cart
           </Button>

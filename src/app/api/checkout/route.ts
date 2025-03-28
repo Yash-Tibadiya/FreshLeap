@@ -21,6 +21,12 @@ export async function POST(request: NextRequest) {
       mode: "payment",
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/cancel`,
+      // Enable shipping address collection
+      shipping_address_collection: {
+        allowed_countries: ["US", "CA", "GB", "AU", "IN"], // Add or modify countries as needed
+      },
+      // Require billing address collection
+      billing_address_collection: "required",
       // Store user ID if available
       client_reference_id: metadata?.userId || undefined,
       // Optional additional metadata for tracking
@@ -51,9 +57,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Retrieve the Stripe checkout session
-    const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ["line_items"], // Include line items in the response
-    });
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    // Retrieve the payment intent to get more details
+    const paymentIntent = session.payment_intent
+      ? await stripe.paymentIntents.retrieve(session.payment_intent as string)
+      : null;
 
     // Ensure payment is successful
     if (session.payment_status !== "paid") {
@@ -89,9 +98,26 @@ export async function GET(request: NextRequest) {
     const updated_at = new Date();
 
     // Get shipping address information
-    const shippingAddress = session.shipping_details?.address
-      ? `${session.shipping_details.address.line1}, ${session.shipping_details.address.city}, ${session.shipping_details.address.state} ${session.shipping_details.address.postal_code}, ${session.shipping_details.address.country}`
-      : "No shipping address provided";
+    let shippingAddress = "No shipping address provided";
+
+    // Try to extract shipping address from payment intent first
+    if (paymentIntent?.shipping?.address) {
+      const address = paymentIntent.shipping.address;
+      shippingAddress =
+        `${address.line1 || ""}${address.line2 ? ", " + address.line2 : ""}, ${address.city || ""}, ${address.state || ""} ${address.postal_code || ""}, ${address.country || ""}`.trim();
+    }
+    // Fallback to customer details if available
+    else if (session.customer_details?.address) {
+      const address = session.customer_details.address;
+      shippingAddress =
+        `${address.line1 || ""}${address.line2 ? ", " + address.line2 : ""}, ${address.city || ""}, ${address.state || ""} ${address.postal_code || ""}, ${address.country || ""}`.trim();
+    }
+
+    // Retrieve line items
+    const lineItems = await stripe.checkout.sessions.listLineItems(sessionId);
+
+    console.log("Creating order items for:", order_id);
+    console.log("Line items:", JSON.stringify(lineItems.data, null, 2));
 
     // Create the order record
     const newOrder = await db
@@ -107,14 +133,8 @@ export async function GET(request: NextRequest) {
       })
       .returning();
 
-    // Retrieve line items from the session
-    const lineItems = session.line_items?.data || [];
-
-    console.log("Creating order items for:", order_id);
-    console.log("Line items:", JSON.stringify(lineItems, null, 2));
-
     // Create order items for each purchased product
-    for (const item of lineItems) {
+    for (const item of lineItems.data) {
       try {
         const order_item_id = uuid();
         const itemName = item.description || "";
