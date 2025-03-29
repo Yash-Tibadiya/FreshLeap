@@ -57,6 +57,7 @@ import { useSession, signOut } from "next-auth/react";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import { CartButton } from "@/components/CartButton";
+import { EditProductForm } from "@/components/EditProductForm";
 
 // Types remain the same
 type Farmer = {
@@ -353,6 +354,7 @@ function ProductsTable({
                       size="icon"
                       onClick={() => onEdit(product)}
                       title="Edit Product"
+                      className="text-green-500 border-green-200 hover:bg-green-50 hover:text-green-600"
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -539,6 +541,8 @@ export default function FarmerDashboardClient({
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false); // Renamed for clarity
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null); // State for selected product
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false); // State for product dialog
+const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+const [isEditFormOpen, setIsEditFormOpen] = useState(false);
 
   const { data: session } = useSession();
   const [menuState, setMenuState] = useState(false);
@@ -583,8 +587,25 @@ export default function FarmerDashboardClient({
 
   // Placeholder for Edit Product - could open a similar form/dialog
   const handleEditProduct = (product: Product) => {
-    toast.info(`Editing product: ${product.name} (Not implemented yet)`);
-    // TODO: Implement edit functionality - maybe set selectedProduct and open an EditProductForm dialog
+    toast.info(`Editing product: ${product.name}`);
+    setEditingProduct(product);
+    setIsEditFormOpen(true);
+  };
+
+  const handleEditProductSuccess = (updatedProduct: Product) => {
+    // Update the products list with the edited product
+    setProducts((prevProducts) =>
+      prevProducts.map((p) =>
+        p.product_id === updatedProduct.product_id ? updatedProduct : p
+      )
+    );
+
+    // If the product was selected in the product dialog, update it there too
+    if (selectedProduct?.product_id === updatedProduct.product_id) {
+      setSelectedProduct(updatedProduct);
+    }
+
+    toast.success("Product updated successfully");
   };
 
   const handleDeleteProduct = async (productId: string) => {
@@ -1043,6 +1064,18 @@ export default function FarmerDashboardClient({
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Edit Product Form */}
+      {editingProduct && (
+        <EditProductForm
+          product={editingProduct}
+          farmerId={farmer!.farmer_id}
+          onSubmitSuccess={handleEditProductSuccess}
+          onCancel={() => setIsEditFormOpen(false)}
+          isOpen={isEditFormOpen}
+          onOpenChange={setIsEditFormOpen}
+        />
+      )}
     </>
   );
 }
