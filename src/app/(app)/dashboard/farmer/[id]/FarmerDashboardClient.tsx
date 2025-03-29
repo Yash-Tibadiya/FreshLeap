@@ -51,6 +51,17 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
@@ -358,7 +369,7 @@ function ProductsTable({
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button
+                    {/* <Button
                       variant="outline"
                       size="icon"
                       className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
@@ -366,7 +377,42 @@ function ProductsTable({
                       title="Delete Product"
                     >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </Button> */}
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+                          title="Delete Product"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-white border-0 shadow-xl dark:bg-zinc-900">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-xl text-zinc-900 dark:text-white">
+                            Delete this Product?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription className="text-gray-600 dark:text-gray-400">
+                            This action cannot be undone. This will permanently
+                            delete this Product from your account.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="text-zinc-700 bg-zinc-100 border-0 dark:bg-zinc-800 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700">
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => onDelete(product.product_id)}
+                            className="text-white bg-red-600 hover:bg-red-700"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </TableCell>
               </TableRow>
@@ -609,7 +655,6 @@ const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   };
 
   const handleDeleteProduct = async (productId: string) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
     try {
       const response = await fetch(`/api/product`, {
         method: "DELETE",

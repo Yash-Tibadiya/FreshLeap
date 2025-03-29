@@ -4,14 +4,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"; // Keep Card for structure if needed, but Dialog will wrap it
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -178,24 +170,39 @@ export function EditProductForm({
       <DialogContent className="sm:max-w-[625px] bg-white dark:bg-zinc-900">
         <DialogHeader>
           <DialogTitle>Edit Product</DialogTitle>
-          <DialogDescription>Update the details for "{product.name}".</DialogDescription>
+          <DialogDescription>
+            Update the details for "{product.name}".
+          </DialogDescription>
         </DialogHeader>
-        <div className="py-4 max-h-[calc(100vh-14rem)] overflow-y-auto pr-2">
+        <div className="py-4 max-h-[calc(100vh-14rem)] overflow-y-auto no-scrollbar pr-2">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" id="edit-product-form"> {/* Added ID */}
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-4"
+              id="edit-product-form"
+            >
+              {" "}
+              {/* Added ID */}
               {/* Image Preview */}
               {previewUrl && (
                 <div className="mb-4">
                   <FormLabel>Current Image</FormLabel>
                   <div className="mt-2 aspect-video w-full max-w-sm mx-auto rounded-md overflow-hidden relative border dark:border-zinc-700">
-                    <Image src={previewUrl} alt="Product image preview" layout="fill" objectFit="cover" />
+                    <Image
+                      src={previewUrl}
+                      alt="Product image preview"
+                      layout="fill"
+                      objectFit="cover"
+                    />
                   </div>
                 </div>
               )}
-               <FormField
+              <FormField
                 control={form.control}
                 name="image"
-                render={({ field }) => ( // Destructure field to exclude value, onChange etc. if handled manually
+                render={(
+                  { field } // Destructure field to exclude value, onChange etc. if handled manually
+                ) => (
                   <FormItem>
                     <FormLabel>Update Product Image (Optional)</FormLabel>
                     <FormControl>
@@ -210,7 +217,6 @@ export function EditProductForm({
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="name"
@@ -230,7 +236,10 @@ export function EditProductForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a category" />
@@ -238,7 +247,11 @@ export function EditProductForm({
                       </FormControl>
                       <SelectContent>
                         {categoryEnum.enumValues.map((category) => (
-                          <SelectItem key={category} value={category} className="capitalize">
+                          <SelectItem
+                            key={category}
+                            value={category}
+                            className="capitalize"
+                          >
                             {category}
                           </SelectItem>
                         ))}
@@ -255,7 +268,11 @@ export function EditProductForm({
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Describe your product..." {...field} rows={4}/>
+                      <Textarea
+                        placeholder="Describe your product..."
+                        {...field}
+                        rows={4}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -269,7 +286,12 @@ export function EditProductForm({
                     <FormItem>
                       <FormLabel>Price ($)</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -295,7 +317,12 @@ export function EditProductForm({
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
           </DialogClose>

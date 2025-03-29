@@ -155,7 +155,6 @@ export function CartButton() {
       clearCart();
     } catch (error: any) {
       console.error("Checkout process error:", error);
-      alert(error.message || "An error occurred during checkout");
     } finally {
       setIsLoading(false);
     }
