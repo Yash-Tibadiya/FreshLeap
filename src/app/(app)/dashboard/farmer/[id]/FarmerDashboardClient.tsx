@@ -24,6 +24,7 @@ import {
   Plus,
   Pencil,
   Trash2,
+  Calendar, // Import Calendar icon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -43,7 +44,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AddProductForm } from "@/components/AddProductForm"; // Import the new form
+import { AddProductForm } from "@/components/AddProductForm";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog"; // Import Dialog components
+import { Separator } from "@/components/ui/separator"; // Import Separator
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
@@ -51,7 +62,7 @@ import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import { CartButton } from "@/components/CartButton";
 
-// Types for our data (assuming these are correct and unchanged)
+// Types (assuming OrderItem now includes name and potentially image_url from the API update)
 type Farmer = {
   farmer_id: string;
   user_id: string;
@@ -68,7 +79,7 @@ type Farmer = {
 
 type Product = {
   product_id: string;
-  farmer_id: string; // Ensure farmer_id is part of the Product type if needed by AddProductForm
+  farmer_id: string;
   name: string;
   category: string;
   description: string;
@@ -77,6 +88,19 @@ type Product = {
   image_url: string;
   created_at: Date;
   updated_at: Date;
+};
+
+type OrderItem = {
+  order_item_id: string;
+  order_id: string;
+  product_id: string;
+  quantity: number;
+  price: number;
+  name?: string; // Added from API update
+  image_url?: string; // Added from API update
+  product?: { // Keep original structure if needed elsewhere, but prefer flattened 'name'
+    name: string;
+  };
 };
 
 type Order = {
@@ -91,21 +115,46 @@ type Order = {
     username: string;
     email: string;
   };
-  items?: OrderItem[];
+  items?: OrderItem[]; // Expecting items array from API update
 };
 
-type OrderItem = {
-  order_item_id: string;
-  order_id: string;
-  product_id: string;
-  quantity: number;
-  price: number;
-  product?: {
-    name: string;
-  };
+
+// Helper function to format date
+const formatDate = (dateString: Date | string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 };
 
-// Dashboard components (DashboardHeader, OverviewCards remain unchanged)
+// Helper function to render status badge (similar to feedback)
+const renderStatusBadge = (status: string) => {
+  let badgeClass = "bg-gray-100 text-gray-800"; // Default
+  switch (status) {
+    case "pending":
+      badgeClass = "bg-yellow-100 text-yellow-800";
+      break;
+    case "shipped":
+      badgeClass = "bg-blue-100 text-blue-800";
+      break;
+    case "completed":
+      badgeClass = "bg-green-100 text-green-800";
+      break;
+    case "cancelled":
+      badgeClass = "bg-red-100 text-red-800";
+      break;
+  }
+  return (
+    <Badge className={`capitalize ${badgeClass} border-none px-2.5 py-0.5 text-xs font-medium`}>
+      {status}
+    </Badge>
+  );
+};
+
+
+// Dashboard components (DashboardHeader, OverviewCards, ProductsTable remain unchanged)
 function DashboardHeader({ farmer }: { farmer: Farmer }) {
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -190,18 +239,16 @@ function OverviewCards({ stats }: { stats: any }) {
   );
 }
 
-
-// Update ProductsTable to accept onAddProductClick prop
 function ProductsTable({
   products,
   onEdit,
   onDelete,
-  onAddProductClick, // Add new prop
+  onAddProductClick,
 }: {
   products: Product[];
   onEdit: (product: Product) => void;
   onDelete: (productId: string) => void;
-  onAddProductClick: () => void; // Define the prop type
+  onAddProductClick: () => void;
 }) {
   return (
     <Card className="border-none shadow-md">
@@ -210,10 +257,9 @@ function ProductsTable({
           <CardTitle>Products</CardTitle>
           <CardDescription>Manage your product inventory</CardDescription>
         </div>
-        {/* Update Button onClick */}
         <Button
           className="bg-green-600 hover:bg-green-700"
-          onClick={onAddProductClick} // Use the passed handler
+          onClick={onAddProductClick}
         >
           <Plus className="mr-2 h-4 w-4" />
           Add Product
@@ -294,16 +340,20 @@ function ProductsTable({
   );
 }
 
-// OrdersTable and SalesChart remain unchanged
-function OrdersTable({ orders, onStatusChange }: {
-  orders: Order[],
-  onStatusChange?: (orderId: string, status: string) => Promise<void>
+// Update OrdersTable to accept onRowClick
+function OrdersTable({
+  orders,
+  onStatusChange,
+  onRowClick, // Add onRowClick prop
+}: {
+  orders: Order[];
+  onStatusChange?: (orderId: string, status: string) => Promise<void>;
+  onRowClick: (order: Order) => void; // Define prop type
 }) {
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
   const handleStatusChange = async (orderId: string, status: string) => {
     if (!onStatusChange) return;
-
     setUpdatingOrderId(orderId);
     try {
       await onStatusChange(orderId, status);
@@ -335,16 +385,23 @@ function OrdersTable({ orders, onStatusChange }: {
           </TableHeader>
           <TableBody>
             {orders.map((order) => (
-              <TableRow key={order.order_id}>
+              // Add onClick and styling to TableRow
+              <TableRow
+                key={order.order_id}
+                onClick={() => onRowClick(order)}
+                className="cursor-pointer hover:bg-muted/50"
+              >
                 <TableCell className="font-medium">#{order.order_id.substring(0, 8)}</TableCell>
                 <TableCell>{order.user?.username || "Unknown"}</TableCell>
                 <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
-                <TableCell>
+                {/* Add stopPropagation to the TableCell containing the Select */}
+                <TableCell onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                   {onStatusChange ? (
                     <Select
                       defaultValue={order.status}
                       onValueChange={(value) => handleStatusChange(order.order_id, value)}
                       disabled={updatingOrderId === order.order_id}
+                      // Remove onClick from Select component itself
                     >
                       <SelectTrigger className={`w-[130px] capitalize ${
                         order.status === "completed"
@@ -365,20 +422,7 @@ function OrdersTable({ orders, onStatusChange }: {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <Badge
-                      variant="outline"
-                      className={`capitalize ${
-                        order.status === "completed"
-                          ? "bg-green-100 text-green-800"
-                          : order.status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : order.status === "cancelled"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-blue-100 text-blue-800"
-                      }`}
-                    >
-                      {order.status}
-                    </Badge>
+                    renderStatusBadge(order.status) // Use helper function here too
                   )}
                 </TableCell>
                 <TableCell>${order.total_price.toFixed(2)}</TableCell>
@@ -391,13 +435,12 @@ function OrdersTable({ orders, onStatusChange }: {
   );
 }
 
+// SalesChart remains unchanged
 function SalesChart() {
-  // This would be replaced with real data
   const chartData = {
     months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
     sales: [4500, 3800, 5100, 4900, 6200, 5800],
   };
-
   return (
     <Card className="border-none shadow-md">
       <CardHeader>
@@ -434,10 +477,12 @@ export default function FarmerDashboardClient({ farmerId }: { farmerId: string }
     totalCustomers: 0,
     totalRevenue: 0,
   });
-  const [showAddProductForm, setShowAddProductForm] = useState(false); // State for form visibility
+  const [showAddProductForm, setShowAddProductForm] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null); // State for selected order
+  const [isDialogOpen, setIsDialogOpen] = useState(false); // State for dialog visibility
 
-    const { data: session } = useSession();
-    const [menuState, setMenuState] = useState(false);
+  const { data: session } = useSession();
+  const [menuState, setMenuState] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -450,7 +495,7 @@ export default function FarmerDashboardClient({ farmerId }: { farmerId: string }
         const data = await response.json();
         setFarmer(data.farmer);
         setProducts(data.products);
-        setOrders(data.orders);
+        setOrders(data.orders); // Assuming API now returns orders with items
         setStats(data.stats);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -472,34 +517,28 @@ export default function FarmerDashboardClient({ farmerId }: { farmerId: string }
         ...prevStats,
         totalProducts: prevStats.totalProducts + 1,
     }));
-    setShowAddProductForm(false); // Hide form on success
+    setShowAddProductForm(false);
   };
 
   const handleEditProduct = (product: Product) => {
     toast.info(`Editing product: ${product.name}`);
-    // TODO: Implement edit functionality (e.g., show edit form)
+    // TODO: Implement edit functionality
   };
 
   const handleDeleteProduct = async (productId: string) => {
-    // Confirmation dialog is recommended here
     if (!confirm("Are you sure you want to delete this product?")) {
         return;
     }
-
     try {
       const response = await fetch(`/api/product`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ product_id: productId }),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to delete product");
       }
-
       setProducts(products.filter(p => p.product_id !== productId));
        setStats((prevStats) => ({
         ...prevStats,
@@ -514,26 +553,35 @@ export default function FarmerDashboardClient({ farmerId }: { farmerId: string }
 
   const handleOrderStatusChange = async (orderId: string, status: string) => {
     try {
-      const response = await fetch(`/api/orders/${orderId}/status`, { // Assuming this endpoint exists
+      const response = await fetch(`/api/orders/${orderId}/status`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
       if (!response.ok) {
         throw new Error(`Failed to update order status: ${response.statusText}`);
       }
+      // Update local state optimistically or based on response
       setOrders(orders.map(order =>
         order.order_id === orderId
           ? { ...order, status }
           : order
       ));
+      // Update selected order if it's the one being changed
+      if (selectedOrder?.order_id === orderId) {
+        setSelectedOrder(prev => prev ? { ...prev, status } : null);
+      }
       return Promise.resolve();
     } catch (error) {
       console.error("Error updating order status:", error);
       return Promise.reject(error);
     }
+  };
+
+  // Handler for clicking an order row
+  const handleOrderRowClick = (order: Order) => {
+    setSelectedOrder(order);
+    setIsDialogOpen(true);
   };
 
   if (loading) {
@@ -556,6 +604,7 @@ export default function FarmerDashboardClient({ farmerId }: { farmerId: string }
 
   return (
     <>
+      {/* Navbar remains unchanged */}
       <nav
         data-state={menuState ? "active" : ""}
         className="fixed z-20 w-full border-b border-dashed dark:border-slate-700 bg-transparent backdrop-blur md:relative lg:dark:bg-transparent lg:bg-black/10"
@@ -648,7 +697,9 @@ export default function FarmerDashboardClient({ farmerId }: { farmerId: string }
           </div>
         </div>
       </nav>
-      <div className="container mx-auto py-8 px-4">
+
+      {/* Main Content */}
+      <div className="container mx-auto py-8 px-4 mt-16 md:mt-0"> {/* Add margin top for fixed nav */}
         <DashboardHeader farmer={farmer} />
 
         <Tabs defaultValue="overview" className="mb-8">
@@ -664,17 +715,17 @@ export default function FarmerDashboardClient({ farmerId }: { farmerId: string }
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <SalesChart />
               <OrdersTable
-                orders={orders.slice(0, 3)}
+                orders={orders.slice(0, 3)} // Show only first 3 in overview
                 onStatusChange={handleOrderStatusChange}
+                onRowClick={handleOrderRowClick} // Pass handler
               />
             </div>
           </TabsContent>
 
           <TabsContent value="products">
-            {/* Conditionally render AddProductForm or ProductsTable */}
             {showAddProductForm ? (
               <AddProductForm
-                farmerId={farmer.farmer_id} // Pass farmer_id
+                farmerId={farmer.farmer_id}
                 onSubmitSuccess={handleAddProductSuccess}
                 onCancel={handleHideAddProductForm}
               />
@@ -683,38 +734,139 @@ export default function FarmerDashboardClient({ farmerId }: { farmerId: string }
                 products={products}
                 onEdit={handleEditProduct}
                 onDelete={handleDeleteProduct}
-                onAddProductClick={handleShowAddProductForm} // Pass the handler
+                onAddProductClick={handleShowAddProductForm}
               />
             )}
           </TabsContent>
 
           <TabsContent value="orders">
             <OrdersTable
-              orders={orders}
+              orders={orders} // Show all orders here
               onStatusChange={handleOrderStatusChange}
+              onRowClick={handleOrderRowClick} // Pass handler
             />
           </TabsContent>
 
           <TabsContent value="analytics">
-            <div className="grid grid-cols-1 gap-6">
-              <SalesChart />
-              <Card className="border-none shadow-md">
-                <CardHeader>
-                  <CardTitle>Product Performance</CardTitle>
-                  <CardDescription>Sales by product category</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px] flex items-center justify-center">
-                    <p className="text-gray-500">
-                      Detailed analytics will be available soon
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+             <div className="grid grid-cols-1 gap-6">
+               <SalesChart />
+               <Card className="border-none shadow-md">
+                 <CardHeader>
+                   <CardTitle>Product Performance</CardTitle>
+                   <CardDescription>Sales by product category</CardDescription>
+                 </CardHeader>
+                 <CardContent>
+                   <div className="h-[300px] flex items-center justify-center">
+                     <p className="text-gray-500">
+                       Detailed analytics will be available soon
+                     </p>
+                   </div>
+                 </CardContent>
+               </Card>
+             </div>
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Order Details Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[625px] bg-white dark:bg-zinc-900">
+          {selectedOrder && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Order Details</DialogTitle>
+                <DialogDescription>
+                  Details for Order #{selectedOrder.order_id}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4 space-y-6">
+                 <div className="flex flex-wrap justify-between items-start">
+                   <div>
+                     <p className="text-sm text-gray-500 dark:text-gray-400">
+                       Customer: {selectedOrder.user?.username || "N/A"}
+                     </p>
+                     <div className="flex items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
+                       <Calendar className="h-4 w-4 mr-1.5" />
+                       Ordered on: {formatDate(selectedOrder.created_at)}
+                     </div>
+                   </div>
+                   <div>{renderStatusBadge(selectedOrder.status)}</div>
+                 </div>
+
+                 <Separator />
+
+                 <div>
+                   <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Order Items</h3>
+                   <Table>
+                     <TableHeader>
+                       <TableRow>
+                         <TableHead className="text-gray-700 dark:text-gray-300">Product</TableHead>
+                         <TableHead className="text-right text-gray-700 dark:text-gray-300">Quantity</TableHead>
+                         <TableHead className="text-right text-gray-700 dark:text-gray-300">Price</TableHead>
+                       </TableRow>
+                     </TableHeader>
+                     <TableBody>
+                       {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                         selectedOrder.items.map((item) => (
+                           <TableRow key={item.order_item_id}>
+                             <TableCell className="font-medium text-gray-800 dark:text-gray-200">
+                               {item.name || "Product"} {/* Use flattened name */}
+                             </TableCell>
+                             <TableCell className="text-right text-gray-800 dark:text-gray-200">
+                               {item.quantity}
+                             </TableCell>
+                             <TableCell className="text-right text-gray-800 dark:text-gray-200">
+                               ${item.price.toFixed(2)}
+                             </TableCell>
+                           </TableRow>
+                         ))
+                       ) : (
+                         <TableRow>
+                           <TableCell
+                             colSpan={3}
+                             className="text-center py-4 text-gray-500 dark:text-gray-400"
+                           >
+                             No items found for this order.
+                           </TableCell>
+                         </TableRow>
+                       )}
+                     </TableBody>
+                   </Table>
+                 </div>
+
+                 <Separator />
+
+                 <div className="flex flex-wrap justify-between items-center">
+                   <div>
+                     <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                       Shipping Address:
+                     </p>
+                     <p className="text-sm mt-1 text-gray-700 dark:text-gray-300">{selectedOrder.shipping_address}</p>
+                   </div>
+                   <div className="flex items-center mt-4 md:mt-0">
+                     <span className="text-sm font-semibold mr-2 text-gray-900 dark:text-gray-100">Total:</span>
+                     <DollarSign className="h-5 w-5 text-green-600 mr-1" />
+                     <span className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                      {selectedOrder.total_price.toFixed(2)}
+                     </span>
+                   </div>
+                 </div>
+
+                 {/* Optional: Add Track Order section if needed */}
+                 {/* {selectedOrder.status === "pending" && ( ... )} */}
+
+              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="secondary">
+                    Close
+                  </Button>
+                </DialogClose>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

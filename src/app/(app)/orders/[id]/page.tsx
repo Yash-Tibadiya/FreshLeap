@@ -346,7 +346,7 @@ export default function OrdersPage() {
                   <div className="flex items-center mt-4 md:mt-0">
                     <DollarSign className="h-5 w-5 text-green-500 mr-1" />
                     <span className="text-xl font-bold">
-                      ${order.total_price.toFixed(2)}
+                    {order.total_price.toFixed(2)}
                     </span>
                   </div>
                 </div>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/index";
-import { Orders } from "@/db/schema";
+import { Orders, orderStatusEnum } from "@/db/schema"; // Import orderStatusEnum
 import { eq } from "drizzle-orm";
 
 export async function PATCH(
@@ -8,28 +8,37 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    // In Next.js App Router, params might be a Promise in some cases
     const { id: orderId } = await params;
     const { status } = await request.json();
 
-    // Validate status
-    const validStatuses = ["pending", "completed", "cancelled", "shipped"];
-    if (!validStatuses.includes(status)) {
+    // Validate status against the enum values
+    if (!orderStatusEnum.enumValues.includes(status)) {
       return NextResponse.json(
-        { error: "Invalid status. Must be one of: pending, completed, cancelled, shipped" },
+        { error: `Invalid status. Must be one of: ${orderStatusEnum.enumValues.join(', ')}` },
         { status: 400 }
       );
     }
 
-    // For demo purposes, we'll just return a success response
-    // In a real app, this would update the database
-    
+    // Update the database
+    const updatedOrderResult = await db
+      .update(Orders)
+      .set({
+        status: status as typeof orderStatusEnum.enumValues[number], // Cast status to the enum type
+        updated_at: new Date(), // Update the timestamp
+      })
+      .where(eq(Orders.order_id, orderId))
+      .returning({ // Return the updated fields
+        order_id: Orders.order_id,
+        status: Orders.status,
+        updated_at: Orders.updated_at,
+      });
+
+    if (updatedOrderResult.length === 0) {
+        return NextResponse.json({ error: "Order not found or failed to update" }, { status: 404 });
+    }
+
     return NextResponse.json({
-      order: {
-        order_id: orderId,
-        status: status,
-        updated_at: new Date()
-      },
+      order: updatedOrderResult[0], // Return the first updated record
       message: "Order status updated successfully"
     });
   } catch (error) {
