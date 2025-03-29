@@ -1,15 +1,21 @@
-"use client"
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
 } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Package,
   ShoppingCart,
@@ -17,7 +23,7 @@ import {
   DollarSign,
   Plus,
   Pencil,
-  Trash2
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -37,8 +43,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AddProductForm } from "@/components/AddProductForm"; // Import the new form
 
-// Types for our data
+// Types for our data (assuming these are correct and unchanged)
 type Farmer = {
   farmer_id: string;
   user_id: string;
@@ -55,6 +62,7 @@ type Farmer = {
 
 type Product = {
   product_id: string;
+  farmer_id: string; // Ensure farmer_id is part of the Product type if needed by AddProductForm
   name: string;
   category: string;
   description: string;
@@ -91,7 +99,7 @@ type OrderItem = {
   };
 };
 
-// Dashboard components
+// Dashboard components (DashboardHeader, OverviewCards remain unchanged)
 function DashboardHeader({ farmer }: { farmer: Farmer }) {
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -122,7 +130,7 @@ function OverviewCards({ stats }: { stats: any }) {
       value: stats.totalProducts,
       icon: <Package className="h-5 w-5 text-blue-600" />,
       description: "Active products in your inventory",
-      change: "+12.5%",
+      change: "+12.5%", // Example change, replace with real data if available
       changeType: "positive",
     },
     {
@@ -130,7 +138,7 @@ function OverviewCards({ stats }: { stats: any }) {
       value: stats.totalOrders,
       icon: <ShoppingCart className="h-5 w-5 text-purple-600" />,
       description: "Orders received this month",
-      change: "+18.2%",
+      change: "+18.2%", // Example change
       changeType: "positive",
     },
     {
@@ -138,7 +146,7 @@ function OverviewCards({ stats }: { stats: any }) {
       value: stats.totalCustomers,
       icon: <UsersIcon className="h-5 w-5 text-orange-600" />,
       description: "Unique customers",
-      change: "+5.7%",
+      change: "+5.7%", // Example change
       changeType: "positive",
     },
     {
@@ -146,7 +154,7 @@ function OverviewCards({ stats }: { stats: any }) {
       value: `$${stats.totalRevenue.toFixed(2)}`,
       icon: <DollarSign className="h-5 w-5 text-green-600" />,
       description: "Revenue this month",
-      change: "+22.3%",
+      change: "+22.3%", // Example change
       changeType: "positive",
     },
   ];
@@ -176,10 +184,18 @@ function OverviewCards({ stats }: { stats: any }) {
   );
 }
 
-function ProductsTable({ products, onEdit, onDelete }: { 
-  products: Product[], 
-  onEdit: (product: Product) => void,
-  onDelete: (productId: string) => void
+
+// Update ProductsTable to accept onAddProductClick prop
+function ProductsTable({
+  products,
+  onEdit,
+  onDelete,
+  onAddProductClick, // Add new prop
+}: {
+  products: Product[];
+  onEdit: (product: Product) => void;
+  onDelete: (productId: string) => void;
+  onAddProductClick: () => void; // Define the prop type
 }) {
   return (
     <Card className="border-none shadow-md">
@@ -188,7 +204,11 @@ function ProductsTable({ products, onEdit, onDelete }: {
           <CardTitle>Products</CardTitle>
           <CardDescription>Manage your product inventory</CardDescription>
         </div>
-        <Button className="bg-green-600 hover:bg-green-700">
+        {/* Update Button onClick */}
+        <Button
+          className="bg-green-600 hover:bg-green-700"
+          onClick={onAddProductClick} // Use the passed handler
+        >
           <Plus className="mr-2 h-4 w-4" />
           Add Product
         </Button>
@@ -211,9 +231,9 @@ function ProductsTable({ products, onEdit, onDelete }: {
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-md bg-gray-100 overflow-hidden">
                       {product.image_url && (
-                        <img 
-                          src={product.image_url} 
-                          alt={product.name} 
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
                           className="h-full w-full object-cover"
                         />
                       )}
@@ -233,7 +253,7 @@ function ProductsTable({ products, onEdit, onDelete }: {
                 </TableCell>
                 <TableCell>${product.price.toFixed(2)}</TableCell>
                 <TableCell>
-                  <Badge 
+                  <Badge
                     variant={product.quantity_available > 10 ? "default" : "destructive"}
                     className={product.quantity_available > 10 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
                   >
@@ -242,16 +262,16 @@ function ProductsTable({ products, onEdit, onDelete }: {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
+                    <Button
+                      variant="outline"
+                      size="icon"
                       onClick={() => onEdit(product)}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
+                    <Button
+                      variant="outline"
+                      size="icon"
                       className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
                       onClick={() => onDelete(product.product_id)}
                     >
@@ -268,15 +288,16 @@ function ProductsTable({ products, onEdit, onDelete }: {
   );
 }
 
-function OrdersTable({ orders, onStatusChange }: { 
-  orders: Order[], 
+// OrdersTable and SalesChart remain unchanged
+function OrdersTable({ orders, onStatusChange }: {
+  orders: Order[],
   onStatusChange?: (orderId: string, status: string) => Promise<void>
 }) {
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
 
   const handleStatusChange = async (orderId: string, status: string) => {
     if (!onStatusChange) return;
-    
+
     setUpdatingOrderId(orderId);
     try {
       await onStatusChange(orderId, status);
@@ -320,11 +341,11 @@ function OrdersTable({ orders, onStatusChange }: {
                       disabled={updatingOrderId === order.order_id}
                     >
                       <SelectTrigger className={`w-[130px] capitalize ${
-                        order.status === "completed" 
-                          ? "bg-green-100 text-green-800" 
-                          : order.status === "pending" 
-                          ? "bg-yellow-100 text-yellow-800" 
-                          : order.status === "cancelled" 
+                        order.status === "completed"
+                          ? "bg-green-100 text-green-800"
+                          : order.status === "pending"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : order.status === "cancelled"
                           ? "bg-red-100 text-red-800"
                           : "bg-blue-100 text-blue-800"
                       }`}>
@@ -338,14 +359,14 @@ function OrdersTable({ orders, onStatusChange }: {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <Badge 
-                      variant="outline" 
+                    <Badge
+                      variant="outline"
                       className={`capitalize ${
-                        order.status === "completed" 
-                          ? "bg-green-100 text-green-800" 
-                          : order.status === "pending" 
-                          ? "bg-yellow-100 text-yellow-800" 
-                          : order.status === "cancelled" 
+                        order.status === "completed"
+                          ? "bg-green-100 text-green-800"
+                          : order.status === "pending"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : order.status === "cancelled"
                           ? "bg-red-100 text-red-800"
                           : "bg-blue-100 text-blue-800"
                       }`}
@@ -381,8 +402,8 @@ function SalesChart() {
         <div className="h-[300px] flex items-end justify-between gap-2">
           {chartData.months.map((month, i) => (
             <div key={month} className="flex flex-col items-center gap-2">
-              <div 
-                className="bg-green-500 rounded-t-md w-12" 
+              <div
+                className="bg-green-500 rounded-t-md w-12"
                 style={{ height: `${chartData.sales[i] / 100}px` }}
               ></div>
               <span className="text-xs text-gray-500">{month}</span>
@@ -407,21 +428,17 @@ export default function FarmerDashboardClient({ farmerId }: { farmerId: string }
     totalCustomers: 0,
     totalRevenue: 0,
   });
+  const [showAddProductForm, setShowAddProductForm] = useState(false); // State for form visibility
 
   useEffect(() => {
     async function fetchData() {
       try {
         setLoading(true);
-        
-        // Fetch data from the API
         const response = await fetch(`/api/farmers/${farmerId}`);
-        
         if (!response.ok) {
           throw new Error(`Failed to fetch farmer data: ${response.statusText}`);
         }
-        
         const data = await response.json();
-        
         setFarmer(data.farmer);
         setProducts(data.products);
         setOrders(data.orders);
@@ -433,52 +450,76 @@ export default function FarmerDashboardClient({ farmerId }: { farmerId: string }
         setLoading(false);
       }
     }
-
     fetchData();
   }, [farmerId]);
 
+  // Handlers for Add Product Form
+  const handleShowAddProductForm = () => setShowAddProductForm(true);
+  const handleHideAddProductForm = () => setShowAddProductForm(false);
+
+  const handleAddProductSuccess = (newProduct: Product) => {
+    setProducts((prevProducts) => [...prevProducts, newProduct]);
+    setStats((prevStats) => ({
+        ...prevStats,
+        totalProducts: prevStats.totalProducts + 1,
+    }));
+    setShowAddProductForm(false); // Hide form on success
+  };
+
   const handleEditProduct = (product: Product) => {
-    // In a real app, this would open a modal or navigate to an edit page
     toast.info(`Editing product: ${product.name}`);
+    // TODO: Implement edit functionality (e.g., show edit form)
   };
 
   const handleDeleteProduct = async (productId: string) => {
-    // In a real app, this would call an API to delete the product
-    // For now, we'll just update the local state
+    // Confirmation dialog is recommended here
+    if (!confirm("Are you sure you want to delete this product?")) {
+        return;
+    }
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      const response = await fetch(`/api/product`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ product_id: productId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete product");
+      }
+
       setProducts(products.filter(p => p.product_id !== productId));
+       setStats((prevStats) => ({
+        ...prevStats,
+        totalProducts: prevStats.totalProducts - 1,
+      }));
       toast.success("Product deleted successfully");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting product:", error);
-      toast.error("Failed to delete product");
+      toast.error(error.message || "Failed to delete product");
     }
   };
-  
+
   const handleOrderStatusChange = async (orderId: string, status: string) => {
     try {
-      // Call the API to update the order status
-      const response = await fetch(`/api/orders/${orderId}/status`, {
+      const response = await fetch(`/api/orders/${orderId}/status`, { // Assuming this endpoint exists
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ status }),
       });
-      
       if (!response.ok) {
         throw new Error(`Failed to update order status: ${response.statusText}`);
       }
-      
-      // Update the local state
-      setOrders(orders.map(order => 
-        order.order_id === orderId 
-          ? { ...order, status } 
+      setOrders(orders.map(order =>
+        order.order_id === orderId
+          ? { ...order, status }
           : order
       ));
-      
       return Promise.resolve();
     } catch (error) {
       console.error("Error updating order status:", error);
@@ -507,7 +548,7 @@ export default function FarmerDashboardClient({ farmerId }: { farmerId: string }
   return (
     <div className="container mx-auto py-8 px-4">
       <DashboardHeader farmer={farmer} />
-      
+
       <Tabs defaultValue="overview" className="mb-8">
         <TabsList className="mb-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -515,7 +556,7 @@ export default function FarmerDashboardClient({ farmerId }: { farmerId: string }
           <TabsTrigger value="orders">Orders</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="overview">
           <OverviewCards stats={stats} />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -523,19 +564,29 @@ export default function FarmerDashboardClient({ farmerId }: { farmerId: string }
             <OrdersTable orders={orders.slice(0, 3)} onStatusChange={handleOrderStatusChange} />
           </div>
         </TabsContent>
-        
+
         <TabsContent value="products">
-          <ProductsTable 
-            products={products} 
-            onEdit={handleEditProduct} 
-            onDelete={handleDeleteProduct} 
-          />
+          {/* Conditionally render AddProductForm or ProductsTable */}
+          {showAddProductForm ? (
+            <AddProductForm
+              farmerId={farmer.farmer_id} // Pass farmer_id
+              onSubmitSuccess={handleAddProductSuccess}
+              onCancel={handleHideAddProductForm}
+            />
+          ) : (
+            <ProductsTable
+              products={products}
+              onEdit={handleEditProduct}
+              onDelete={handleDeleteProduct}
+              onAddProductClick={handleShowAddProductForm} // Pass the handler
+            />
+          )}
         </TabsContent>
-        
+
         <TabsContent value="orders">
           <OrdersTable orders={orders} onStatusChange={handleOrderStatusChange} />
         </TabsContent>
-        
+
         <TabsContent value="analytics">
           <div className="grid grid-cols-1 gap-6">
             <SalesChart />
