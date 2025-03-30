@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id: farmerUserId } = await params;
+    const { id: farmerUserId } = params;
 
     const farmerResult = await db
       .select({
@@ -41,7 +41,7 @@ export async function GET(
       .where(eq(Products.farmer_id, farmer.farmer_id))
       .execute();
 
-    const productIds = farmerProducts.map(p => p.product_id);
+    const productIds = farmerProducts.map((p) => p.product_id);
 
     let ordersData: any[] = [];
     let totalCustomers = 0;
@@ -54,7 +54,9 @@ export async function GET(
         .where(inArray(OrderItems.product_id, productIds))
         .execute();
 
-      const orderIds = orderItemsResult.map(oi => oi.order_id).filter((id): id is string => id !== null && id !== undefined);
+      const orderIds = orderItemsResult
+        .map((oi) => oi.order_id)
+        .filter((id): id is string => id !== null && id !== undefined);
 
       if (orderIds.length > 0) {
         const fetchedOrders = await db
@@ -69,7 +71,7 @@ export async function GET(
             user: {
               username: Users.username,
               email: Users.email,
-            }
+            },
           })
           .from(Orders)
           .innerJoin(Users, eq(Orders.user_id, Users.user_id))
@@ -88,10 +90,13 @@ export async function GET(
                 quantity: OrderItems.quantity,
                 price: OrderItems.price,
                 name: Products.name, // Get product name
-                image_url: Products.image_url // Optionally get image url
+                image_url: Products.image_url, // Optionally get image url
               })
               .from(OrderItems)
-              .innerJoin(Products, eq(OrderItems.product_id, Products.product_id))
+              .innerJoin(
+                Products,
+                eq(OrderItems.product_id, Products.product_id)
+              )
               .where(eq(OrderItems.order_id, order.order_id))
               .execute();
             return { ...order, items }; // Combine order with its items
@@ -101,7 +106,10 @@ export async function GET(
         ordersData = ordersWithItems; // Assign orders with items
 
         totalCustomers = new Set(ordersData.map((order) => order.user_id)).size;
-        totalRevenue = ordersData.reduce((sum, order) => sum + (order.total_price || 0), 0);
+        totalRevenue = ordersData.reduce(
+          (sum, order) => sum + (order.total_price || 0),
+          0
+        );
       }
     }
 
@@ -129,6 +137,75 @@ export async function GET(
     console.error("Error fetching farmer data:", error);
     return NextResponse.json(
       { error: "Failed to fetch farmer data" },
+      { status: 500 }
+    );
+  }
+}
+
+// Add PATCH endpoint for updating farmer profile
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id: farmerId } = params;
+    const body = await request.json();
+
+    // Validate the request body - only allow specific fields to be updated
+    const { farm_name, farm_location, contact_number } = body;
+
+    if (!farm_name && !farm_location && !contact_number) {
+      return NextResponse.json(
+        { error: "At least one field must be provided for update" },
+        { status: 400 }
+      );
+    }
+
+    // Check if the farmer exists
+    const existingFarmer = await db
+      .select()
+      .from(Farmers)
+      .where(eq(Farmers.farmer_id, farmerId))
+      .limit(1)
+      .execute();
+
+    if (existingFarmer.length === 0) {
+      return NextResponse.json({ error: "Farmer not found" }, { status: 404 });
+    }
+
+    // Build the update object with only the provided fields
+    const updateData: Partial<typeof Farmers.$inferInsert> = {};
+
+    if (farm_name) updateData.farm_name = farm_name;
+    if (farm_location) updateData.farm_location = farm_location;
+    if (contact_number) updateData.contact_number = contact_number;
+
+    // Set the updated_at timestamp
+    updateData.updated_at = new Date();
+
+    // Update the farmer profile
+    await db
+      .update(Farmers)
+      .set(updateData)
+      .where(eq(Farmers.farmer_id, farmerId))
+      .execute();
+
+    // Return the updated farmer data
+    const updatedFarmer = await db
+      .select()
+      .from(Farmers)
+      .where(eq(Farmers.farmer_id, farmerId))
+      .limit(1)
+      .execute();
+
+    return NextResponse.json({
+      message: "Farmer profile updated successfully",
+      farmer: updatedFarmer[0],
+    });
+  } catch (error) {
+    console.error("Error updating farmer profile:", error);
+    return NextResponse.json(
+      { error: "Failed to update farmer profile" },
       { status: 500 }
     );
   }

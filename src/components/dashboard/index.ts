@@ -1,5 +1,6 @@
 export * from "./DashboardHeader";
 export * from "./DashboardNav";
+export * from "./EditProfileDialog";
 export * from "./OrderDialog";
 export * from "./OrdersTable";
 export * from "./OverviewCards";

@@ -28,7 +28,8 @@ export function ProductCard({ product }: ProductCardProps) {
       product_id,
       name,
       price,
-      image_url
+      image_url,
+      description: undefined
     });
   };
   
