@@ -150,3 +150,17 @@
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+/* Default sidebar styling */
+.sidebar {
+  width: 16rem; /* 64px * 4 */
+  background-color: #1f2937; /* Tailwind's bg-gray-800 */
+  color: white;
+  height: 100vh;
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Hide the sidebar */
+.sidebar-hidden {
+  display: none;
+}

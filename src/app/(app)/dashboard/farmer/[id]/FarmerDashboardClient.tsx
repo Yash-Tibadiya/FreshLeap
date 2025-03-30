@@ -16,8 +16,10 @@ import { useSession } from "next-auth/react";
 
 // Import extracted components
 import {
+  AddProductForm,
   DashboardHeader,
   DashboardNav,
+  EditProductForm,
   OrderDialog,
   OrdersTable,
   OverviewCards,
@@ -29,10 +31,6 @@ import {
   Order,
   DashboardStats,
 } from "@/components/dashboard";
-
-// Import forms
-import { AddProductForm } from "@/components/AddProductForm";
-import { EditProductForm } from "@/components/EditProductForm";
 
 export default function FarmerDashboardClient({
   farmerId,

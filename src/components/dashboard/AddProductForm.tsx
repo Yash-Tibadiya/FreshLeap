@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select";
 import { categoryEnum } from "@/db/schema"; // Assuming schema is accessible client-side or values are hardcoded/fetched
 import { useState } from "react";
+import Image from "next/image";
 
 // Define the Zod schema for validation
 const productSchema = z.object({
@@ -39,7 +40,10 @@ const productSchema = z.object({
   category: z.enum(categoryEnum.enumValues),
   description: z.string().min(10, "Description must be at least 10 characters"),
   price: z.coerce.number().positive("Price must be a positive number"),
-  quantity_available: z.coerce.number().int().nonnegative("Quantity must be a non-negative integer"),
+  quantity_available: z.coerce
+    .number()
+    .int()
+    .nonnegative("Quantity must be a non-negative integer"),
   image: z.instanceof(File).optional(), // Allow optional image upload
 });
 
@@ -51,8 +55,14 @@ interface AddProductFormProps {
   onCancel: () => void; // Callback to cancel/close the form
 }
 
-export function AddProductForm({ farmerId, onSubmitSuccess, onCancel }: AddProductFormProps) {
+export function AddProductForm({
+  farmerId,
+  onSubmitSuccess,
+  onCancel,
+}: AddProductFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -64,6 +74,17 @@ export function AddProductForm({ farmerId, onSubmitSuccess, onCancel }: AddProdu
       image: undefined,
     },
   });
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      form.setValue("image", file);
+      setPreviewUrl(URL.createObjectURL(file));
+    } else {
+      form.setValue("image", undefined);
+      setPreviewUrl(null);
+    }
+  };
 
   const onSubmit = async (values: ProductFormData) => {
     setIsSubmitting(true);
@@ -93,9 +114,12 @@ export function AddProductForm({ farmerId, onSubmitSuccess, onCancel }: AddProdu
       toast.success(result.message || "Product added successfully!");
       onSubmitSuccess(result.product); // Pass the new product back
       form.reset(); // Reset form after successful submission
+      setPreviewUrl(null); // Clear the image preview
     } catch (error: any) {
       console.error("Error adding product:", error);
-      toast.error(error.message || "An error occurred while adding the product.");
+      toast.error(
+        error.message || "An error occurred while adding the product."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -105,11 +129,46 @@ export function AddProductForm({ farmerId, onSubmitSuccess, onCancel }: AddProdu
     <Card className="w-full max-w-2xl mx-auto my-8 border-none shadow-lg">
       <CardHeader>
         <CardTitle>Add New Product</CardTitle>
-        <CardDescription>Fill in the details for your new product.</CardDescription>
+        <CardDescription>
+          Fill in the details for your new product.
+        </CardDescription>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
+            {/* Image Preview - similar to EditProductForm */}
+            {previewUrl && (
+              <div className="mb-4">
+                <FormLabel>Current Image</FormLabel>
+                <div className="mt-2 aspect-square w-full max-w-sm mx-auto rounded-md overflow-hidden relative border dark:border-zinc-700">
+                  <Image
+                    src={previewUrl}
+                    alt="Product image preview"
+                    layout="fill"
+                    objectFit="cover"
+                  />
+                </div>
+              </div>
+            )}
+
+            <FormField
+              control={form.control}
+              name="image"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Product Image</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="name"
@@ -129,7 +188,10 @@ export function AddProductForm({ farmerId, onSubmitSuccess, onCancel }: AddProdu
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a category" />
@@ -137,7 +199,11 @@ export function AddProductForm({ farmerId, onSubmitSuccess, onCancel }: AddProdu
                     </FormControl>
                     <SelectContent>
                       {categoryEnum.enumValues.map((category) => (
-                        <SelectItem key={category} value={category} className="capitalize">
+                        <SelectItem
+                          key={category}
+                          value={category}
+                          className="capitalize"
+                        >
                           {category}
                         </SelectItem>
                       ))}
@@ -154,7 +220,10 @@ export function AddProductForm({ farmerId, onSubmitSuccess, onCancel }: AddProdu
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Describe your product..." {...field} />
+                    <Textarea
+                      placeholder="Describe your product..."
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -168,7 +237,12 @@ export function AddProductForm({ farmerId, onSubmitSuccess, onCancel }: AddProdu
                   <FormItem>
                     <FormLabel>Price ($)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -188,30 +262,21 @@ export function AddProductForm({ farmerId, onSubmitSuccess, onCancel }: AddProdu
                 )}
               />
             </div>
-             <FormField
-              control={form.control}
-              name="image"
-              render={({ field: { onChange, value, ...rest } }) => (
-                <FormItem>
-                  <FormLabel>Product Image</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
-                      {...rest}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </CardContent>
           <CardFooter className="flex justify-end gap-2 mt-4">
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
-            <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              className="bg-green-600 hover:bg-green-700"
+              disabled={isSubmitting}
+            >
               {isSubmitting ? "Adding..." : "Add Product"}
             </Button>
           </CardFooter>

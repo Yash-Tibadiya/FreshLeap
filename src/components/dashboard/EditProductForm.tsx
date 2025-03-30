@@ -187,7 +187,7 @@ export function EditProductForm({
               {previewUrl && (
                 <div className="mb-4">
                   <FormLabel>Current Image</FormLabel>
-                  <div className="mt-2 aspect-video w-full max-w-sm mx-auto rounded-md overflow-hidden relative border dark:border-zinc-700">
+                  <div className="mt-2 aspect-square w-full max-w-sm mx-auto rounded-md overflow-hidden relative border dark:border-zinc-700">
                     <Image
                       src={previewUrl}
                       alt="Product image preview"

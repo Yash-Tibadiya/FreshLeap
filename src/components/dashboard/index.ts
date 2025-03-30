@@ -1,5 +1,7 @@
+export * from "./AddProductForm";
 export * from "./DashboardHeader";
 export * from "./DashboardNav";
+export * from "./EditProductForm";
 export * from "./EditProfileDialog";
 export * from "./OrderDialog";
 export * from "./OrdersTable";
