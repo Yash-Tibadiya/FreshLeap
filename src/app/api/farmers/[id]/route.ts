@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id: farmerUserId } = params;
+    const { id: farmerUserId } = await params;
 
     const farmerResult = await db
       .select({
@@ -148,7 +148,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id: farmerId } = params;
+    const { id: farmerId } = await params;
     const body = await request.json();
 
     // Validate the request body - only allow specific fields to be updated

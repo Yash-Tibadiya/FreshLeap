@@ -91,7 +91,7 @@ export function ProductDialog({ product, isOpen, onOpenChange }: ProductDialogPr
             <h4 className="font-semibold mb-1 text-gray-900 dark:text-gray-100">
               Description
             </h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
               {product.description}
             </p>
           </div>
