@@ -30,6 +30,7 @@ import {
   DollarSign,
   ShoppingBag,
 } from "lucide-react";
+import { Footer } from "@/components/Footer";
 
 // Type definitions
 interface OrderItem {
@@ -364,6 +365,7 @@ export default function OrdersPage() {
           ))}
         </div>
       </div>
+        <Footer />
     </>
   );
 }

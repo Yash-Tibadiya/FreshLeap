@@ -20,6 +20,7 @@ import { useSession, signOut } from "next-auth/react";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import { CartButton } from "@/components/CartButton";
+import { Footer } from "@/components/Footer";
 
 // Define Product type (can be shared in a types file later)
 interface Product {
@@ -399,6 +400,7 @@ function ProductsPageContent() {
         </div>
       </main>
       {/* Footer can be added here if needed */}
+      <Footer />
     </div>
   );
 }
