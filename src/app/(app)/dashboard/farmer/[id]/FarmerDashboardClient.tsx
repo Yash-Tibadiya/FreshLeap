@@ -30,6 +30,7 @@ import {
   Product,
   Order,
   DashboardStats,
+  MonthlySalesData,
 } from "@/components/dashboard";
 
 export default function FarmerDashboardClient({
@@ -48,6 +49,7 @@ export default function FarmerDashboardClient({
     totalCustomers: 0,
     totalRevenue: 0,
   });
+  const [monthlySales, setMonthlySales] = useState<MonthlySalesData[]>([]); // Add this state hook here, before any other hooks
 
   // UI state
   const [showAddProductForm, setShowAddProductForm] = useState(false);
@@ -75,6 +77,7 @@ export default function FarmerDashboardClient({
         setProducts(data.products);
         setOrders(data.orders);
         setStats(data.stats);
+        setMonthlySales(data.monthlySales || []); // Add monthly sales data
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to load dashboard data");
@@ -231,7 +234,7 @@ export default function FarmerDashboardClient({
           <TabsContent value="overview">
             <OverviewCards stats={stats} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <SalesChart />
+              <SalesChart monthlySales={monthlySales} />
               <OrdersTable
                 orders={orders.slice(0, 3)}
                 onStatusChange={handleOrderStatusChange}
@@ -268,8 +271,8 @@ export default function FarmerDashboardClient({
 
           <TabsContent value="analytics">
             <div className="grid grid-cols-1 gap-6">
-              <SalesChart />
-              <Card className="border-none shadow-md">
+              <SalesChart monthlySales={monthlySales} />
+              {/* <Card className="border-none shadow-md">
                 <CardHeader>
                   <CardTitle>Product Performance</CardTitle>
                   <CardDescription>Sales by product category</CardDescription>
@@ -281,7 +284,7 @@ export default function FarmerDashboardClient({
                     </p>
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
             </div>
           </TabsContent>
         </Tabs>
