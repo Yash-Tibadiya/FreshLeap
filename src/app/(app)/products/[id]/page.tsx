@@ -253,16 +253,27 @@ export default function ProductDetail() {
           description: "Thank you for your review!",
         });
 
-        // Add the new review to the list and update stats
-        const newReview: Review = data.review;
-        setReviews([...reviews, newReview]);
-        setReviewStats({
-          averageRating:
-            (reviewStats.averageRating * reviewStats.totalReviews +
-              newReview.review.rating) /
-            (reviewStats.totalReviews + 1),
-          totalReviews: reviewStats.totalReviews + 1,
-        });
+        // Make sure the review data is properly structured before using it
+        if (data.review && data.review.review) {
+          // Add the new review to the list and update stats
+          const newReview: Review = data.review;
+          setReviews([...reviews, newReview]);
+          setReviewStats({
+            averageRating:
+              (reviewStats.averageRating * reviewStats.totalReviews +
+                newReview.review.rating) /
+              (reviewStats.totalReviews + 1),
+            totalReviews: reviewStats.totalReviews + 1,
+          });
+        } else {
+          // Refresh reviews from the server instead of trying to update locally
+          console.log(
+            "Review submitted but structure doesn't match expected format. Refreshing data..."
+          );
+          // This will trigger the useEffect that fetches reviews
+          // No need to call fetchProductReviews directly since product is already set
+        }
+
         setHasUserReviewed(true);
         setIsReviewDialogOpen(false);
         setReviewFormData({ rating: 5, comment: "" });
