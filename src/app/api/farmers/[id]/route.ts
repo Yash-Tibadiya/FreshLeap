@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/index";
 import { Farmers, Products, Users, Orders, OrderItems } from "@/db/schema";
-import { eq, inArray, sql } from "drizzle-orm";
+import { eq, inArray, sql, sum } from "drizzle-orm"; // Removed unused 'extract'
 
 export async function GET(
   request: NextRequest,
@@ -122,6 +122,32 @@ export async function GET(
     const totalProducts = products.length;
     const totalOrders = ordersData.length;
 
+    // Calculate monthly sales from ordersData
+    const monthlySales = ordersData.reduce((acc: Record<string, number>, order) => { // Explicitly type accumulator
+      if (order.created_at && typeof order.total_price === 'number') { // Ensure total_price is a number
+        const date = new Date(order.created_at);
+        // Format as 'YYYY-MM' for grouping
+        const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        acc[monthYear] = (acc[monthYear] || 0) + order.total_price;
+      }
+      return acc;
+    }, {}); // Initial value is an empty object, type is inferred by acc type annotation
+
+    // Format for the chart [{ month: 'Jan', sales: 100 }, ...]
+    // Consider the last 6 months or a relevant period
+    const formattedSalesData = Object.entries(monthlySales)
+      .map(([monthYear, sales]) => {
+        const [year, monthNum] = monthYear.split('-');
+        const monthName = new Date(parseInt(year), parseInt(monthNum) - 1).toLocaleString('default', { month: 'short' });
+        return { month: monthName, sales: sales / 100 }; // Assuming price is in cents
+      })
+      .sort((a, b) => { // Optional: Sort by month if needed, requires more robust date handling
+        const dateA = new Date(a.month + " 1, 2024"); // Assuming current year for simple sort
+        const dateB = new Date(b.month + " 1, 2024");
+        return dateA.getMonth() - dateB.getMonth();
+      });
+      // .slice(-6); // Optionally limit to last 6 months
+
     return NextResponse.json({
       farmer,
       products,
@@ -130,8 +156,9 @@ export async function GET(
         totalProducts,
         totalOrders,
         totalCustomers,
-        totalRevenue,
+        totalRevenue: totalRevenue, // Adjust revenue if stored in cents
       },
+      monthlySales: formattedSalesData, // Add monthly sales data
     });
   } catch (error) {
     console.error("Error fetching farmer data:", error);
