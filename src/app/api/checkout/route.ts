@@ -116,9 +116,6 @@ export async function GET(request: NextRequest) {
     // Retrieve line items
     const lineItems = await stripe.checkout.sessions.listLineItems(sessionId);
 
-    console.log("Creating order items for:", order_id);
-    console.log("Line items:", JSON.stringify(lineItems.data, null, 2));
-
     // Create the order record
     const newOrder = await db
       .insert(Orders)

@@ -74,22 +74,6 @@ export default async function Home() {
             <ProductsGrid products={products} />
           </Suspense>
         </section>
-
-        <section className="py-8">
-          <h2 className="text-2xl font-bold mb-6">Categories</h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {["Fruits", "Vegetables", "Dairy", "Meat", "Grains"].map(
-              (category) => (
-                <div
-                  key={category}
-                  className="bg-zinc-900 rounded-lg p-6 text-center hover:bg-zinc-800 transition-colors cursor-pointer"
-                >
-                  <h3 className="font-medium">{category}</h3>
-                </div>
-              )
-            )}
-          </div>
-        </section>
       </main>
 
       <footer className="border-t border-zinc-800 py-6 md:py-8">

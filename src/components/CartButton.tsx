@@ -210,7 +210,7 @@ export function CartButton() {
         <div className="mt-6 space-y-4">
           {items.length > 0 ? (
             <>
-              <div className="space-y-6 max-h-[60vh] overflow-auto p-2">
+              <div className="space-y-6 max-h-[60vh] overflow-auto no-scrollbar p-2">
                 {items.map((item) => (
                   <div
                     key={item.product_id}
