@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/index";
 import { ProductReviews, Users, Products } from "@/db/schema";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/options";
+import { authOptions } from "../../auth/[...nextauth]/options";
 import { eq } from "drizzle-orm";
 
 // GET: Get all reviews for a specific product
@@ -12,7 +12,7 @@ export async function GET(
 ) {
   try {
     // Ensure productId is properly awaited/accessed
-    const { productId } = params;
+    const { productId } = await params;
 
     // Validate product ID
     if (!productId) {
@@ -95,7 +95,7 @@ export async function POST(
     }
 
     // Ensure productId is properly awaited/accessed
-    const { productId } = params;
+    const { productId } = await params;
 
     // Validate product ID
     if (!productId) {
@@ -223,7 +223,7 @@ export async function DELETE(
     }
 
     // Ensure productId is properly awaited/accessed
-    const { productId } = params;
+    const { productId } = await params;
 
     // Validate product ID
     if (!productId) {

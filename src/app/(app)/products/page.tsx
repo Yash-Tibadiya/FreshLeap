@@ -2,7 +2,6 @@
 
 import { Suspense, useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation"; // Import useSearchParams
-import Navbar from "@/components/Navbar"; // Assuming Navbar is needed here too
 import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
