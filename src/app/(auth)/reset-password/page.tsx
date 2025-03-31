@@ -202,7 +202,7 @@ export default function ResetPassword() {
               <div className="w-16 h-16 mb-2">
                 <Link href="/" aria-label="go home">
                   <Image
-                    src="/images/logo.png"
+                    src="/images/logobgr.png"
                     alt="FreshLeap"
                     width={64}
                     height={64}
