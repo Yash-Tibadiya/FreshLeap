@@ -34,7 +34,7 @@ export function ProductCard({ product }: ProductCardProps) {
   };
   
   return (
-    <Card className="overflow-hidden bg-zinc-900 border-zinc-800">
+    <Card className="overflow-hidden bg-zinc-900 border-zinc-800 py-0">
       <div className="relative aspect-square overflow-hidden">
         {image_url ? (
           <Image
@@ -48,7 +48,7 @@ export function ProductCard({ product }: ProductCardProps) {
             <span className="text-gray-400">No image</span>
           </div>
         )}
-        <Badge className="absolute top-2 right-2 bg-green-600 hover:bg-green-700">{category}</Badge>
+        <Badge className="absolute top-2 right-2 bg-green-700 hover:bg-green-700 p-1.5 text-sm text-white">{category}</Badge>
       </div>
       <CardContent className="p-4">
         <h3 className="font-semibold text-lg line-clamp-1 text-white">{name}</h3>
