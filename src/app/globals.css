@@ -43,6 +43,7 @@
   --radius-xl: calc(var(--radius) + 4px);
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-grid: grid 15s linear infinite;
 
   @keyframes accordion-down {
     from {
@@ -59,6 +60,15 @@
     }
     to {
       height: 0;
+    }
+  }
+  
+  @keyframes grid {
+    0% {
+      transform: translateY(-50%);
+    }
+    100% {
+      transform: translateY(0);
     }
   }
 }
@@ -162,4 +172,9 @@
 /* Hide the sidebar */
 .sidebar-hidden {
   display: none;
+}
+
+/* Grid animation utility class */
+.animate-grid {
+  animation: var(--animate-grid);
 }

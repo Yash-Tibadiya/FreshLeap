@@ -6,57 +6,54 @@ import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import {
-  ShoppingBasket,
-  Truck,
-  Users,
-  Sparkles,
-} from "lucide-react";
+import { ShoppingBasket, Truck, Users, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Cover } from "@/components/ui/cover";
 import { Feature197 } from "@/components/accordion-feature-section";
+import { RetroGrid } from "@/components/ui/retro-grid";
+import { WorldMapB } from "@/components/WorldMap";
 
 const demoData = {
   features: [
     {
       id: 1,
       title: "What is the refund policy?",
-      image: "https://shadcnblocks.com/images/block/placeholder-1.svg",
+      image: "/images/placeholder-1.png",
       description:
         "We offer a 30-day money-back guarantee. If you're unsatisfied with our product, request a refund within 30 days of purchase. Refunds are processed within 3-5 business days. Please note, refunds are available only for new customers, and limited to one per customer.",
     },
     {
       id: 2,
       title: "How do I place an order on FreshLeap?",
-      image: "https://shadcnblocks.com/images/block/placeholder-2.svg",
+      image: "/images/placeholder-2.png",
       description:
         "Simply create an account, browse the marketplace, add your selected products to your cart, and proceed to checkout. You'll be able to choose your preferred payment method and delivery option.",
     },
     {
       id: 3,
       title: "How are the prices determined?",
-      image: "https://shadcnblocks.com/images/block/placeholder-3.svg",
+      image: "/images/placeholder-3.png",
       description:
         "Prices are set by the individual farmers and are based on the market rates for fresh, locally grown produce. You can compare prices between different farmers to find the best deal.",
     },
     {
       id: 4,
       title: "Can I track my order after purchasing?",
-      image: "https://shadcnblocks.com/images/block/placeholder-4.svg",
+      image: "/images/placeholder-4.png",
       description:
         "Yes, once your order is processed, you'll receive tracking information and updates regarding the status of your delivery.",
     },
     {
       id: 5,
       title: "What happens if the product I ordered is out of stock?",
-      image: "https://shadcnblocks.com/images/block/placeholder-5.svg",
+      image: "/images/placeholder-5.png",
       description:
         "If a product is out of stock, you'll be notified immediately, and your order will either be adjusted or canceled based on your preference. You can choose to wait for the next batch or select an alternative product.",
     },
     {
       id: 6,
       title: "What products can I purchase on FreshLeap?",
-      image: "https://shadcnblocks.com/images/block/placeholder-2.svg",
+      image: "/images/placeholder-2.png",
       description:
         "You can browse and purchase a variety of fresh, locally grown produce including fruits, vegetables, herbs, and other farm-fresh products directly from local farmers.",
     },
@@ -116,34 +113,38 @@ export default async function Home() {
   return (
     <>
       <div className="relative flex flex-col min-h-screen overflow-hidden transition-colors duration-300 bg-gradient-to-r from-green-400 to-green-800 dark:bg-gradient-to-r dark:to-black dark:from-green-900">
-        <Navbar />
-
+        <div className="bg-black">
+          <Navbar />
+        </div>
         {/* Hero Section */}
-        <section className="relative pt-24 pb-16 px-4 md:pt-32 md:pb-24 overflow-hidden">
-          <div className="container mx-auto max-w-6xl z-10 py-28">
-            <div className="flex flex-col items-center text-center gap-y-8 z-10">
-              {/* Headline with modern gradient text */}
-              <h1
-                className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl 
+        <section className="relative overflow-hidden">
+          <div className="relative flex w-full flex-col items-center justify-center overflow-hidden border bg-background md:shadow-xl z-0">
+            <div className="container mx-auto max-w-6xl z-10 py-82">
+              <div className="flex flex-col items-center text-center gap-y-8 z-10">
+                {/* Headline with modern gradient text */}
+                <h1
+                  className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl 
                 bg-gradient-to-br from-green-800 to-green-600 dark:from-green-300 dark:to-green-500 
                 bg-clip-text text-transparent animate-fade-in z-10"
-              >
-                Farm Fresh Produce, <br />
-                <span className="text-green-600 dark:text-green-400 z-10">
-                  Directly to Your Door
-                </span>
-              </h1>
+                >
+                  Farm Fresh Products, <br />
+                  <span className="text-green-600 dark:text-green-400 z-10">
+                    Directly to Your Door
+                  </span>
+                </h1>
 
-              {/* Subheadline with fluid typography */}
-              <p className="text-balance mx-auto max-w-2xl text-slate-700 dark:text-slate-300 text-lg sm:text-xl md:text-2xl animate-fade-in delay-150 z-10">
-                Shop the finest selection of locally-grown vegetables, fruits,
-                and artisanal goods from farmers in your community.
-              </p>
+                {/* Subheadline with fluid typography */}
+                <p className="text-balance mx-auto max-w-2xl text-slate-700 dark:text-slate-300 text-lg sm:text-xl md:text-2xl animate-fade-in delay-150 z-10">
+                  Shop the finest selection of locally-grown vegetables, fruits,
+                  and artisanal goods from farmers in your community.
+                </p>
+              </div>
             </div>
+            {/* <RetroGrid /> */}
           </div>
         </section>
 
-        <main className="flex-1 container mx-auto py-8">
+        <main className="flex-1 container mx-auto pt-24 py-8">
           <section className="mb-12">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
               <div>
@@ -213,7 +214,7 @@ export default async function Home() {
                   <div
                     key={index}
                     className="flex flex-col items-center text-center p-6 rounded-xl 
-                    bg-white/80 dark:bg-slate-800/50 backdrop-blur/30
+                    bg-white/80 dark:bg-green-900/30 backdrop-blur/30
                     border border-green-100 dark:border-green-900/50 
                     shadow-sm hover:shadow-md transition duration-300 animate-fade-in"
                     style={{ animationDelay: `${index * 100}ms` }}
@@ -263,10 +264,14 @@ export default async function Home() {
               </div>
             </div>
           </section>
-
+{/* 
           <section>
             <Feature197 {...demoData} />
-          </section>
+          </section> */}
+
+          {/* <section>
+            <WorldMapB />
+          </section> */}
         </main>
         <Footer />
       </div>
