@@ -4,7 +4,6 @@ import { db } from "@/db/index";
 import { Users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import bcryptjs from "bcryptjs";
-import { JWT } from "next-auth/jwt";
 
 // Extend the built-in types
 declare module "next-auth" {

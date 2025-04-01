@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/index";
 import { Products, categoryEnum } from "@/db/schema";
-import { sql, eq, and, gte, lte, ilike, count } from "drizzle-orm"; // Import count
+import { eq, and, gte, lte, ilike, count } from "drizzle-orm"; // Import count
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

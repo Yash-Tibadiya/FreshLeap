@@ -4,13 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
 
@@ -59,7 +52,6 @@ export default function FarmerDashboardClient({
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
-  const { data: session } = useSession();
   const [menuState, setMenuState] = useState(false);
 
   useEffect(() => {

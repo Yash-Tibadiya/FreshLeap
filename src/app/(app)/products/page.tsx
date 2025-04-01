@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation"; // Import useSearchParams and useRouter
+import { useSearchParams, useRouter } from "next/navigation";
 import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,6 @@ import {
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -115,12 +114,6 @@ function ProductsPageContent() {
   const [menuState, setMenuState] = useState(false);
 
   // Initialize state from URL search params or defaults
-  // const [searchTerm, setSearchTerm] = useState(searchParams.get("name") || "");
-  // const [category, setCategory] = useState(
-  //   searchParams.get("category") || "all"
-  // ); // Default to "all"
-  // const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
-  // const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
   const [searchTerm, setSearchTerm] = useState(searchParams.get("name") || "");
   const [category, setCategory] = useState(
     searchParams.get("category") || "all"
@@ -239,16 +232,6 @@ function ProductsPageContent() {
     router.push(`?${params.toString()}`, { scroll: false });
     // fetchProducts will be triggered by the useEffect watching searchParams
   };
-
-  // const handleReset = () => {
-  //   setSearchTerm("");
-  //   setCategory("all"); // Reset to "all"
-  //   setMinPrice("");
-  //   setMaxPrice("");
-  //   setCurrentPage(1); // Reset page state
-  //   // Update URL (clear params) and trigger fetch via useEffect
-  //   router.push(window.location.pathname, { scroll: false });
-  // };
 
   const handleReset = () => {
     setSearchTerm("");

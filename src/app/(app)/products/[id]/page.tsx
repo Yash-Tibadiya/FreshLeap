@@ -138,54 +138,6 @@ export default function ProductDetail() {
     fetchProductDetails();
   }, [params.id]);
 
-  // Fetch product reviews
-  // useEffect(() => {
-  //   async function fetchProductReviews() {
-  //     if (!params.id) return;
-
-  //     try {
-  //       // Get the product ID (ensure it's a string)
-  //       const productId = String(params.id);
-  //       console.log("Fetching reviews for product ID:", productId);
-
-  //       const apiUrl = `/api/review/${productId}`;
-  //       console.log("Reviews API URL:", apiUrl);
-
-  //       const response = await fetch(apiUrl);
-  //       console.log("Reviews API response status:", response.status);
-
-  //       if (!response.ok) {
-  //         console.error("Error response from review API:", response.status);
-  //         return;
-  //       }
-
-  //       const data = await response.json();
-  //       console.log("Reviews data received:", data);
-
-  //       if (data.success) {
-  //         setReviews(data.reviews || []);
-  //         setReviewStats({
-  //           averageRating: data.averageRating || 0,
-  //           totalReviews: data.totalReviews || 0,
-  //         });
-
-  //         // Check if the current user has already reviewed this product
-  //         if (session?.user?.id) {
-  //           const userReviewed = data.reviews.some(
-  //             (review: Review) => review.review.user_id === session.user.id
-  //           );
-  //           setHasUserReviewed(userReviewed);
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching reviews:", error);
-  //     }
-  //   }
-
-  //   if (product) {
-  //     fetchProductReviews();
-  //   }
-  
   const fetchProductReviews = async () => {
     if (!params.id) return;
 
@@ -266,78 +218,6 @@ export default function ProductDetail() {
       [name]: name === "rating" ? Number(value) : value,
     });
   };
-
-  // Handle review form submission
-  // const handleSubmitReview = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-
-  //   if (!session?.user) {
-  //     router.push("/sign-in");
-  //     return;
-  //   }
-
-  //   if (!params.id) return;
-
-  //   try {
-  //     setIsSubmittingReview(true);
-
-  //     // Get the product ID (ensure it's a string)
-  //     const productId = String(params.id);
-
-  //     const response = await fetch(`/api/review/${productId}`, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify(reviewFormData),
-  //     });
-
-  //     const data = await response.json();
-  //     console.log("Review submission response:", data);
-
-  //     if (data.success) {
-  //       toast.success("Review Submitted", {
-  //         description: "Thank you for your review!",
-  //       });
-
-  //       // Make sure the review data is properly structured before using it
-  //       if (data.review && data.review.review) {
-  //         // Add the new review to the list and update stats
-  //         const newReview: Review = data.review;
-  //         setReviews([...reviews, newReview]);
-  //         setReviewStats({
-  //           averageRating:
-  //             (reviewStats.averageRating * reviewStats.totalReviews +
-  //               newReview.review.rating) /
-  //             (reviewStats.totalReviews + 1),
-  //           totalReviews: reviewStats.totalReviews + 1,
-  //         });
-  //       } else {
-  //         // Refresh reviews from the server instead of trying to update locally
-  //         console.log(
-  //           "Review submitted but structure doesn't match expected format. Refreshing data..."
-  //         );
-  //         // This will trigger the useEffect that fetches reviews
-  //         // No need to call fetchProductReviews directly since product is already set
-  //       }
-
-  //       setHasUserReviewed(true);
-  //       setIsReviewDialogOpen(false);
-  //       setReviewFormData({ rating: 5, comment: "" });
-  //     } else {
-  //       toast.error("Error", {
-  //         description: data.message || "Failed to submit review.",
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Error submitting review:", error);
-  //     toast.error("Error", {
-  //       description: "Something went wrong. Please try again.",
-  //     });
-  //   } finally {
-  //     setIsSubmittingReview(false);
-  //   }
-  // };
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -59,9 +59,3 @@ export type DashboardStats = {
   totalCustomers: number;
   totalRevenue: number;
 };
-
-// Type for the monthly sales data used in the chart
-export type MonthlySalesData = {
-  month: string; // e.g., "Jan", "Feb"
-  sales: number; // Total sales amount for the month
-};
