@@ -8,6 +8,14 @@ import { useCartStore } from "@/store/useCartStore";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
+// Define an interface for the order response
+interface OrderResponse {
+  orderNumber?: string;
+  order?: {
+    order_id?: string;
+  };
+}
+
 export default function CheckoutSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -40,7 +48,7 @@ export default function CheckoutSuccessPage() {
   }, [sessionId, clearCart]);
 
   // Function to verify payment with backend and create the order
-  const verifyPaymentAndCreateOrder = async (sessionId: any) => {
+  const verifyPaymentAndCreateOrder = async (sessionId: string) => {
     try {
       // Call the verification endpoint
       const response = await fetch(`/api/checkout?session_id=${sessionId}`);
@@ -49,7 +57,7 @@ export default function CheckoutSuccessPage() {
         throw new Error(`Verification failed with status: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data: OrderResponse = await response.json();
 
       // Set the order number from the response
       if (data.orderNumber) {

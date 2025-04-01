@@ -68,7 +68,7 @@ export default function FarmerDashboardClient({
         setProducts(data.products);
         setOrders(data.orders);
         setStats(data.stats);
-        setMonthlySales(data.monthlySales || []); // Add monthly sales data
+        setMonthlySales(data.monthlySales || []);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to load dashboard data");
@@ -128,23 +128,28 @@ export default function FarmerDashboardClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ product_id: productId }),
       });
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to delete product");
       }
+
       setProducts(products.filter((p) => p.product_id !== productId));
       setStats((prevStats) => ({
         ...prevStats,
         totalProducts: prevStats.totalProducts - 1,
       }));
+
       toast.success("Product deleted successfully");
-    } catch (error: any) {
+    } catch (error) {
+      // Use type assertion to handle the error
       console.error("Error deleting product:", error);
-      toast.error(error.message || "Failed to delete product");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete product"
+      );
     }
   };
 
-  // Order status change handler
   const handleOrderStatusChange = async (orderId: string, status: string) => {
     try {
       const response = await fetch(`/api/orders/${orderId}/status`, {
