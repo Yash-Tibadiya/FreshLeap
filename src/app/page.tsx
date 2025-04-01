@@ -10,12 +10,58 @@ import {
   ShoppingBasket,
   Truck,
   Users,
-  Leaf,
-  ShoppingBag,
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { Cover } from "@/components/ui/cover";
+import { Feature197 } from "@/components/accordion-feature-section";
+
+const demoData = {
+  features: [
+    {
+      id: 1,
+      title: "What is the refund policy?",
+      image: "https://shadcnblocks.com/images/block/placeholder-1.svg",
+      description:
+        "We offer a 30-day money-back guarantee. If you're unsatisfied with our product, request a refund within 30 days of purchase. Refunds are processed within 3-5 business days. Please note, refunds are available only for new customers, and limited to one per customer.",
+    },
+    {
+      id: 2,
+      title: "How do I place an order on FreshLeap?",
+      image: "https://shadcnblocks.com/images/block/placeholder-2.svg",
+      description:
+        "Simply create an account, browse the marketplace, add your selected products to your cart, and proceed to checkout. You'll be able to choose your preferred payment method and delivery option.",
+    },
+    {
+      id: 3,
+      title: "How are the prices determined?",
+      image: "https://shadcnblocks.com/images/block/placeholder-3.svg",
+      description:
+        "Prices are set by the individual farmers and are based on the market rates for fresh, locally grown produce. You can compare prices between different farmers to find the best deal.",
+    },
+    {
+      id: 4,
+      title: "Can I track my order after purchasing?",
+      image: "https://shadcnblocks.com/images/block/placeholder-4.svg",
+      description:
+        "Yes, once your order is processed, you'll receive tracking information and updates regarding the status of your delivery.",
+    },
+    {
+      id: 5,
+      title: "What happens if the product I ordered is out of stock?",
+      image: "https://shadcnblocks.com/images/block/placeholder-5.svg",
+      description:
+        "If a product is out of stock, you'll be notified immediately, and your order will either be adjusted or canceled based on your preference. You can choose to wait for the next batch or select an alternative product.",
+    },
+    {
+      id: 6,
+      title: "What products can I purchase on FreshLeap?",
+      image: "https://shadcnblocks.com/images/block/placeholder-2.svg",
+      description:
+        "You can browse and purchase a variety of fresh, locally grown produce including fruits, vegetables, herbs, and other farm-fresh products directly from local farmers.",
+    },
+  ],
+};
 
 // Loading skeleton for products
 function ProductSkeleton() {
@@ -216,6 +262,10 @@ export default async function Home() {
                 </div>
               </div>
             </div>
+          </section>
+
+          <section>
+            <Feature197 {...demoData} />
           </section>
         </main>
         <Footer />
