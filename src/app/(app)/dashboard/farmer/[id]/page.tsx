@@ -4,7 +4,8 @@ import FarmerDashboardClient from "./FarmerDashboardClient";
 export default async function FarmerDashboard({
   params,
 }: {
-  params: { id: string };
+  // params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
 
