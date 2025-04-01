@@ -4,8 +4,6 @@ import { useRef } from "react";
 import { motion } from "framer-motion";
 import DottedMap from "dotted-map";
 import Image from "next/image";
-import { useTheme } from "next-themes";
-
 interface MapProps {
   dots?: Array<{
     start: { lat: number; lng: number; label?: string };

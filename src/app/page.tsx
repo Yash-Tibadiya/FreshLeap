@@ -242,10 +242,10 @@ export default async function Home() {
                   FreshLeap in numbers
                 </h2>
                 <p>
-                  FreshLeap is more than just a marketplace. It's a platform
-                  where users can easily browse and buy fresh, locally-sourced
-                  produce, supporting farmers and connecting communities to
-                  local food.
+                  FreshLeap is more than just a marketplace. It&apos;s a
+                  platform where users can easily browse and buy fresh,
+                  locally-sourced produce, supporting farmers and connecting
+                  communities to local food.
                 </p>
               </div>
 
@@ -265,7 +265,7 @@ export default async function Home() {
               </div>
             </div>
           </section>
-          
+
           <section>
             <Feature197 {...demoData} />
           </section>
