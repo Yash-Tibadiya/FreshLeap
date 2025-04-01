@@ -10,6 +10,9 @@ const publicRoutes = [
   "/verify",
   "/forgot-password",
   "/reset-password",
+  "/products",
+  "/checkout/success",
+  "/checkout/cancel",
 ];
 
 // Define authentication routes that should redirect to home if user is already logged in
@@ -21,12 +24,17 @@ const authRoutes = [
   "/reset-password",
 ];
 
-// Define routes that require specific roles
-const farmerRoutes = ["/dashboard/farmer", "/products/manage"];
-const customerRoutes = ["/dashboard/customer", "/orders"];
-
 export default async function middleware(req: NextRequestWithAuth) {
   const pathname = req.nextUrl.pathname;
+
+  // Check if it's a product detail page, API route, or other public routes
+  if (
+    pathname.match(/^\/products\/[\w-]+$/) ||
+    pathname.startsWith("/api/") ||
+    publicRoutes.some((route) => pathname.startsWith(route))
+  ) {
+    return NextResponse.next();
+  }
 
   // Get the user's token
   const token = await getToken({
@@ -35,13 +43,8 @@ export default async function middleware(req: NextRequestWithAuth) {
   });
 
   // If user is authenticated and trying to access auth routes, redirect to home
-  if (token && authRoutes.some(route => pathname.startsWith(route))) {
+  if (token && authRoutes.some((route) => pathname.startsWith(route))) {
     return NextResponse.redirect(new URL("/", req.url));
-  }
-
-  // Check if the route is public
-  if (publicRoutes.some((route) => pathname.startsWith(route))) {
-    return NextResponse.next();
   }
 
   // If no token, redirect to sign-in
@@ -56,7 +59,7 @@ export default async function middleware(req: NextRequestWithAuth) {
     return NextResponse.redirect(new URL("/verify", req.url));
   }
 
-  // Role-based access control
+  // Role-based access control for dashboard
   if (token.role === "farmer" && pathname === "/dashboard") {
     return NextResponse.redirect(
       new URL(`/dashboard/farmer/${token.id}`, req.url)
@@ -69,18 +72,18 @@ export default async function middleware(req: NextRequestWithAuth) {
     );
   }
 
-  if (
-    farmerRoutes.some((route) => pathname.startsWith(route)) &&
-    token.role !== "farmer"
-  ) {
+  // Role-specific routes protection
+  if (pathname.startsWith("/dashboard/farmer") && token.role !== "farmer") {
     return NextResponse.redirect(new URL("/unauthorized", req.url));
   }
 
   if (
-    customerRoutes.some((route) => pathname.startsWith(route)) &&
-    token.role !== "customer"
+    pathname.startsWith("/dashboard/customer") ||
+    pathname.startsWith("/orders")
   ) {
-    return NextResponse.redirect(new URL("/unauthorized", req.url));
+    if (token.role !== "customer") {
+      return NextResponse.redirect(new URL("/unauthorized", req.url));
+    }
   }
 
   // If all checks pass, proceed to the requested page
@@ -96,8 +99,7 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public files (public directory)
-     * - api routes (API endpoints)
      */
-    "/((?!_next/static|_next/image|favicon.ico|public|api).*)",
+    "/((?!_next/static|_next/image|favicon.ico|public).*)",
   ],
 };
