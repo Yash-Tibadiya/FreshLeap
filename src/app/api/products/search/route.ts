@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/index";
 import { Products, categoryEnum } from "@/db/schema";
-import { sql, eq, and, gte, lte, ilike } from "drizzle-orm";
+import { sql, eq, and, gte, lte, ilike, count } from "drizzle-orm"; // Import count
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -9,7 +9,14 @@ export async function GET(request: NextRequest) {
   const minPrice = searchParams.get("minPrice");
   const maxPrice = searchParams.get("maxPrice");
   const name = searchParams.get("name");
-
+  const page = parseInt(searchParams.get("page") || "1", 10); // Get page, default to 1
+  const limit = parseInt(searchParams.get("limit") || "8", 10); // Get limit, default to 8
+ 
+  // Validate page and limit
+  const safePage = Math.max(1, isNaN(page) ? 1 : page);
+  const safeLimit = Math.max(1, isNaN(limit) ? 8 : limit);
+  const offset = (safePage - 1) * safeLimit;
+ 
   try {
     // Build the query conditions dynamically
     const conditions = [];
@@ -33,13 +40,26 @@ export async function GET(request: NextRequest) {
       conditions.push(ilike(Products.name, `%${name}%`));
     }
 
-    const query = db.select().from(Products).where(and(...conditions));
+    const whereCondition = conditions.length > 0 ? and(...conditions) : undefined;
 
-    // console.log("Executing query:", query.toSQL()); // For debugging
+    // Query for total count
+    const countQuery = db.select({ value: count() }).from(Products).where(whereCondition);
 
-    const products = await query;
+    // Query for paginated products
+    const productsQuery = db.select().from(Products).where(whereCondition).limit(safeLimit).offset(offset);
 
-    return NextResponse.json(products);
+    // console.log("Executing count query:", countQuery.toSQL()); // For debugging
+    // console.log("Executing products query:", productsQuery.toSQL()); // For debugging
+
+    // Execute both queries
+    const [countResult, products] = await Promise.all([
+      countQuery,
+      productsQuery
+    ]);
+
+    const totalCount = countResult[0]?.value ?? 0;
+
+    return NextResponse.json({ products, totalCount });
   } catch (error) {
     console.error("Error fetching products:", error);
     return NextResponse.json(

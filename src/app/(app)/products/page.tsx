@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "next/navigation"; // Import useSearchParams
+import { useSearchParams, useRouter } from "next/navigation"; // Import useSearchParams and useRouter
 import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"; // Import Pagination components
 import { categoryEnum } from "@/db/schema";
 
 import Link from "next/link";
@@ -91,8 +92,12 @@ function ProductsLoading() {
 // Main component wrapped with Suspense for searchParams
 function ProductsPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter(); // Add useRouter
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1); // Page state
+  const [totalPages, setTotalPages] = useState(1); // Total pages state
+  const productsPerPage = 8; // Products per page
 
   const { data: session } = useSession();
   const [menuState, setMenuState] = useState(false);
@@ -105,37 +110,53 @@ function ProductsPageContent() {
   const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
 
-  // Fetch products based on current state
-  const fetchProducts = useCallback(async () => {
+  // Fetch products based on URL search params and page
+  const fetchProducts = useCallback(async (paramsToUse: URLSearchParams, page: number) => {
     setIsLoading(true);
-    const params = new URLSearchParams();
-    if (category && category !== "all") params.append("category", category); // Only add if not "all"
-    if (minPrice) params.append("minPrice", minPrice);
-    if (maxPrice) params.append("maxPrice", maxPrice);
-    if (searchTerm) params.append("name", searchTerm);
+    // Read filters directly from the passed searchParams
+    const currentCategory = paramsToUse.get("category") || "all";
+    const currentMinPrice = paramsToUse.get("minPrice") || "";
+    const currentMaxPrice = paramsToUse.get("maxPrice") || "";
+    const currentSearchTerm = paramsToUse.get("name") || "";
+
+    const apiParams = new URLSearchParams();
+    if (currentCategory && currentCategory !== "all") apiParams.append("category", currentCategory);
+    if (currentMinPrice) apiParams.append("minPrice", currentMinPrice);
+    if (currentMaxPrice) apiParams.append("maxPrice", currentMaxPrice);
+    if (currentSearchTerm) apiParams.append("name", currentSearchTerm);
+    apiParams.append("page", page.toString()); // Add page
+    apiParams.append("limit", productsPerPage.toString()); // Add limit
 
     // Update URL without navigation (optional, good for shareable links)
     // window.history.pushState(null, '', `?${params.toString()}`);
 
     try {
-      const response = await fetch(`/api/products/search?${params.toString()}`);
+      const response = await fetch(`/api/products/search?${apiParams.toString()}`); // Fix: Use apiParams here
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data: Product[] = await response.json();
-      setProducts(data);
+      // Assuming API returns { products: Product[], totalCount: number }
+      const data: { products: Product[]; totalCount: number } = await response.json();
+      setProducts(data.products);
+      setTotalPages(Math.ceil(data.totalCount / productsPerPage));
+      // Update current page state based on the page we actually fetched for
+      setCurrentPage(page);
     } catch (error) {
       console.error("Error fetching products:", error);
       setProducts([]);
     } finally {
       setIsLoading(false);
     }
-  }, [category, minPrice, maxPrice, searchTerm]); // Dependencies
+  // Only depend on stable values or things that change how fetching works fundamentally
+  }, [productsPerPage]);
 
   // Fetch products when search params change or on initial load
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]); // fetchProducts itself depends on the state values
+    // Fetch products when searchParams change (filters or page)
+    const pageFromUrl = Number(searchParams.get("page")) || 1;
+    // Pass the current searchParams object to fetchProducts
+    fetchProducts(searchParams, pageFromUrl);
+  }, [fetchProducts, searchParams]); // Keep dependencies
 
   // Update state if URL search params change (e.g., browser back/forward)
   useEffect(() => {
@@ -143,6 +164,7 @@ function ProductsPageContent() {
     setCategory(searchParams.get("category") || "all"); // Default to "all"
     setMinPrice(searchParams.get("minPrice") || "");
     setMaxPrice(searchParams.get("maxPrice") || "");
+    setCurrentPage(Number(searchParams.get("page")) || 1); // Update page state from URL
   }, [searchParams]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -157,9 +179,10 @@ function ProductsPageContent() {
     else params.delete("minPrice");
     if (maxPrice) params.set("maxPrice", maxPrice);
     else params.delete("maxPrice");
-    window.history.pushState(null, "", `?${params.toString()}`);
-    // Manually trigger fetch as pushState doesn't trigger navigation/param hooks immediately
-    fetchProducts();
+    params.set("page", "1"); // Reset to page 1 on new search/filter
+    // Use router.push for Next.js App Router to trigger updates
+    router.push(`?${params.toString()}`, { scroll: false });
+    // fetchProducts will be triggered by the useEffect watching searchParams
   };
 
   const handleReset = () => {
@@ -167,15 +190,19 @@ function ProductsPageContent() {
     setCategory("all"); // Reset to "all"
     setMinPrice("");
     setMaxPrice("");
-    // Update URL and trigger fetch
-    window.history.pushState(null, "", window.location.pathname); // Clear query string
-    // Manually trigger fetch after state reset
-    setIsLoading(true);
-    fetch(`/api/products/search`) // Fetch all
-      .then((res) => res.json())
-      .then((data) => setProducts(data))
-      .catch((err) => console.error("Error fetching on reset:", err))
-      .finally(() => setIsLoading(false));
+    setCurrentPage(1); // Reset page state
+    // Update URL (clear params) and trigger fetch via useEffect
+    router.push(window.location.pathname, { scroll: false });
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      const params = new URLSearchParams(window.location.search);
+      params.set("page", newPage.toString());
+      router.push(`?${params.toString()}`, { scroll: false });
+      // fetchProducts will be triggered by useEffect watching searchParams
+    }
   };
 
   return (
@@ -397,6 +424,56 @@ function ProductsPageContent() {
           </h1>
           {/* Products Display */}
           <ProductsGrid products={products} isLoading={isLoading} />
+
+          {/* Pagination Controls */}
+          {!isLoading && totalPages > 1 && (
+            <div className="mt-8 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(currentPage - 1);
+                      }}
+                      aria-disabled={currentPage <= 1}
+                      className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                  {/* Simple Page Number Display - Can be enhanced */}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(page);
+                          }}
+                          isActive={currentPage === page}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )
+                  )}
+                  {/* Add Ellipsis logic if needed for many pages */}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(currentPage + 1);
+                      }}
+                      aria-disabled={currentPage >= totalPages}
+                      className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
       </main>
       {/* Footer can be added here if needed */}
