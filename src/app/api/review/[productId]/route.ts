@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm";
 // GET: Get all reviews for a specific product
 export async function GET(
   request: NextRequest,
-  { params }: { params: { productId: string } }
+  { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
     // Ensure productId is properly awaited/accessed
@@ -77,7 +77,7 @@ export async function GET(
 // POST: Create a new review for a specific product
 export async function POST(
   request: NextRequest,
-  { params }: { params: { productId: string } }
+  { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
     // Get session to check authentication
@@ -198,7 +198,7 @@ export async function POST(
 // DELETE: Delete reviews for a specific product (admin operation)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { productId: string } }
+  { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
     // Get session to check authentication

@@ -5,7 +5,7 @@ import { eq, inArray, sql } from "drizzle-orm"; // Removed unused 'extract'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: farmerUserId } = await params;
@@ -196,7 +196,7 @@ export async function GET(
 // Add PATCH endpoint for updating farmer profile
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: farmerId } = await params;

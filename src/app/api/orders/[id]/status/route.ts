@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: orderId } = await params;
@@ -14,7 +14,9 @@ export async function PATCH(
     // Validate status against the enum values
     if (!orderStatusEnum.enumValues.includes(status)) {
       return NextResponse.json(
-        { error: `Invalid status. Must be one of: ${orderStatusEnum.enumValues.join(', ')}` },
+        {
+          error: `Invalid status. Must be one of: ${orderStatusEnum.enumValues.join(", ")}`,
+        },
         { status: 400 }
       );
     }
@@ -23,23 +25,27 @@ export async function PATCH(
     const updatedOrderResult = await db
       .update(Orders)
       .set({
-        status: status as typeof orderStatusEnum.enumValues[number], // Cast status to the enum type
+        status: status as (typeof orderStatusEnum.enumValues)[number], // Cast status to the enum type
         updated_at: new Date(), // Update the timestamp
       })
       .where(eq(Orders.order_id, orderId))
-      .returning({ // Return the updated fields
+      .returning({
+        // Return the updated fields
         order_id: Orders.order_id,
         status: Orders.status,
         updated_at: Orders.updated_at,
       });
 
     if (updatedOrderResult.length === 0) {
-        return NextResponse.json({ error: "Order not found or failed to update" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Order not found or failed to update" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({
       order: updatedOrderResult[0], // Return the first updated record
-      message: "Order status updated successfully"
+      message: "Order status updated successfully",
     });
   } catch (error) {
     console.error("Error updating order status:", error);
