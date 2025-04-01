@@ -75,7 +75,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </p>
           <div className="mt-2 flex items-center justify-between">
             <span className="font-bold text-lg text-white">
-              ${(price / 100).toFixed(2)}
+              ${(price).toFixed(2)}
             </span>
             <span className="text-sm text-gray-400">
               {quantity_available > 0

@@ -59,6 +59,16 @@ const Navbar = () => {
               ) : (
                 <div className="flex space-x-3 items-center">
                   <CartButton />
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="p-5 bg-input/10 text-white"
+                  >
+                    <Link href={`/products`}>
+                      <span>All Products</span>
+                    </Link>
+                  </Button>
                   <Button asChild variant="outline" size="sm" className="p-5">
                     <Link href="/sign-in">
                       <span>Login</span>

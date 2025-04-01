@@ -245,6 +245,16 @@ export default function OrdersPage() {
               <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit lg:border-l lg:pl-6">
                 {session && (
                   <>
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="p-5 bg-input/10 text-white"
+                    >
+                      <Link href={`/products`}>
+                        <span>All Products</span>
+                      </Link>
+                    </Button>
                     <CartButton />
                     <Button
                       asChild
@@ -347,7 +357,7 @@ export default function OrdersPage() {
                   <div className="flex items-center mt-4 md:mt-0">
                     <DollarSign className="h-5 w-5 text-green-500 mr-1" />
                     <span className="text-xl font-bold">
-                    {order.total_price.toFixed(2)}
+                      {order.total_price.toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -365,7 +375,7 @@ export default function OrdersPage() {
           ))}
         </div>
       </div>
-        <Footer />
+      <Footer />
     </>
   );
 }

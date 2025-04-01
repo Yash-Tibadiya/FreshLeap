@@ -508,7 +508,7 @@ export default function ProductDetail() {
                 </span>
               </div>
               <p className="text-xl font-semibold mb-1">
-                ${(product.price / 100).toFixed(2)}
+                ${(product.price).toFixed(2)}
               </p>
               <p className="text-sm">
                 Category: <span className="capitalize">{product.category}</span>

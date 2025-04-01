@@ -253,6 +253,16 @@ function ProductsPageContent() {
                         <span>My Orders</span>
                       </Link>
                     </Button>
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="p-5 bg-input/10 text-white"
+                    >
+                      <Link href={`/products`}>
+                        <span>All Products</span>
+                      </Link>
+                    </Button>
                     <CartButton />
                     <Button
                       asChild
