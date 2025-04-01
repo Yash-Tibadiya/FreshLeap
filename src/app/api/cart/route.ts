@@ -50,14 +50,12 @@ export async function POST(request: NextRequest) {
       const created_at = new Date();
       const updated_at = new Date();
 
-      await db
-        .insert(Carts)
-        .values({
-          cart_id,
-          user_id,
-          created_at,
-          updated_at,
-        });
+      await db.insert(Carts).values({
+        cart_id,
+        user_id,
+        created_at,
+        updated_at,
+      });
     } else {
       cart_id = cart[0].cart_id;
     }
@@ -86,7 +84,10 @@ export async function POST(request: NextRequest) {
         .returning();
 
       return NextResponse.json(
-        { cart_item: updatedCartItem[0], message: "Cart item updated successfully" },
+        {
+          cart_item: updatedCartItem[0],
+          message: "Cart item updated successfully",
+        },
         { status: 200 }
       );
     } else {
@@ -104,14 +105,20 @@ export async function POST(request: NextRequest) {
         .returning();
 
       return NextResponse.json(
-        { cart_item: newCartItem[0], message: "Item added to cart successfully" },
+        {
+          cart_item: newCartItem[0],
+          message: "Item added to cart successfully",
+        },
         { status: 201 }
       );
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error adding to cart:", error);
     return NextResponse.json(
-      { message: "Failed to add item to cart", error: error.message },
+      {
+        message: "Failed to add item to cart",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
@@ -152,10 +159,12 @@ export async function GET(request: NextRequest) {
     // Get product details for each cart item
     const cartItemsWithDetails = await Promise.all(
       cartItems.map(async (item) => {
-        const product = item.product_id ? await db
-          .select()
-          .from(Products)
-          .where(eq(Products.product_id, item.product_id as string)) : [];
+        const product = item.product_id
+          ? await db
+              .select()
+              .from(Products)
+              .where(eq(Products.product_id, item.product_id as string))
+          : [];
 
         return {
           ...item,
@@ -168,10 +177,13 @@ export async function GET(request: NextRequest) {
       { cart: cart[0], cart_items: cartItemsWithDetails },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error getting cart:", error);
     return NextResponse.json(
-      { message: "Failed to get cart", error: error.message },
+      {
+        message: "Failed to get cart",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
@@ -221,14 +233,20 @@ export async function PUT(request: NextRequest) {
         .returning();
 
       return NextResponse.json(
-        { cart_item: updatedCartItem[0], message: "Cart item updated successfully" },
+        {
+          cart_item: updatedCartItem[0],
+          message: "Cart item updated successfully",
+        },
         { status: 200 }
       );
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error updating cart item:", error);
     return NextResponse.json(
-      { message: "Failed to update cart item", error: error.message },
+      {
+        message: "Failed to update cart item",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
@@ -273,9 +291,7 @@ export async function DELETE(request: NextRequest) {
       }
 
       const cart_id = cart[0].cart_id;
-      await db
-        .delete(CartItems)
-        .where(eq(CartItems.cart_id, cart_id));
+      await db.delete(CartItems).where(eq(CartItems.cart_id, cart_id));
 
       return NextResponse.json(
         { message: "Cart cleared successfully" },
@@ -287,10 +303,13 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       );
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error deleting from cart:", error);
     return NextResponse.json(
-      { message: "Failed to remove item from cart", error: error.message },
+      {
+        message: "Failed to remove item from cart",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
