@@ -13,7 +13,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"; // Import Pagination components
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"; // Import Pagination components
 import { categoryEnum } from "@/db/schema";
 
 import Link from "next/link";
@@ -22,6 +30,8 @@ import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import { CartButton } from "@/components/CartButton";
 import { Footer } from "@/components/Footer";
+
+import debounce from "lodash/debounce";
 
 // Define Product type (can be shared in a types file later)
 interface Product {
@@ -95,7 +105,9 @@ function ProductsPageContent() {
   const router = useRouter(); // Add useRouter
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1); // Page state
+  const [currentPage, setCurrentPage] = useState(
+    Number(searchParams.get("page")) || 1
+  ); // Page state
   const [totalPages, setTotalPages] = useState(1); // Total pages state
   const productsPerPage = 8; // Products per page
 
@@ -103,52 +115,89 @@ function ProductsPageContent() {
   const [menuState, setMenuState] = useState(false);
 
   // Initialize state from URL search params or defaults
+  // const [searchTerm, setSearchTerm] = useState(searchParams.get("name") || "");
+  // const [category, setCategory] = useState(
+  //   searchParams.get("category") || "all"
+  // ); // Default to "all"
+  // const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
+  // const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
   const [searchTerm, setSearchTerm] = useState(searchParams.get("name") || "");
   const [category, setCategory] = useState(
     searchParams.get("category") || "all"
-  ); // Default to "all"
+  );
   const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
 
+  // Create a debounced search function that will update URL params
+  const debouncedSearch = useCallback(
+    debounce(() => {
+      const params = new URLSearchParams(window.location.search);
+
+      if (searchTerm) params.set("name", searchTerm);
+      else params.delete("name");
+
+      if (category && category !== "all") params.set("category", category);
+      else params.delete("category");
+
+      if (minPrice) params.set("minPrice", minPrice);
+      else params.delete("minPrice");
+
+      if (maxPrice) params.set("maxPrice", maxPrice);
+      else params.delete("maxPrice");
+
+      params.set("page", "1"); // Reset to page 1 on filter change
+
+      router.push(`?${params.toString()}`, { scroll: false });
+    }, 500), // 500ms debounce delay - adjust as needed
+    [searchTerm, category, minPrice, maxPrice, router]
+  );
+
   // Fetch products based on URL search params and page
-  const fetchProducts = useCallback(async (paramsToUse: URLSearchParams, page: number) => {
-    setIsLoading(true);
-    // Read filters directly from the passed searchParams
-    const currentCategory = paramsToUse.get("category") || "all";
-    const currentMinPrice = paramsToUse.get("minPrice") || "";
-    const currentMaxPrice = paramsToUse.get("maxPrice") || "";
-    const currentSearchTerm = paramsToUse.get("name") || "";
+  const fetchProducts = useCallback(
+    async (paramsToUse: URLSearchParams, page: number) => {
+      setIsLoading(true);
+      // Read filters directly from the passed searchParams
+      const currentCategory = paramsToUse.get("category") || "all";
+      const currentMinPrice = paramsToUse.get("minPrice") || "";
+      const currentMaxPrice = paramsToUse.get("maxPrice") || "";
+      const currentSearchTerm = paramsToUse.get("name") || "";
 
-    const apiParams = new URLSearchParams();
-    if (currentCategory && currentCategory !== "all") apiParams.append("category", currentCategory);
-    if (currentMinPrice) apiParams.append("minPrice", currentMinPrice);
-    if (currentMaxPrice) apiParams.append("maxPrice", currentMaxPrice);
-    if (currentSearchTerm) apiParams.append("name", currentSearchTerm);
-    apiParams.append("page", page.toString()); // Add page
-    apiParams.append("limit", productsPerPage.toString()); // Add limit
+      const apiParams = new URLSearchParams();
+      if (currentCategory && currentCategory !== "all")
+        apiParams.append("category", currentCategory);
+      if (currentMinPrice) apiParams.append("minPrice", currentMinPrice);
+      if (currentMaxPrice) apiParams.append("maxPrice", currentMaxPrice);
+      if (currentSearchTerm) apiParams.append("name", currentSearchTerm);
+      apiParams.append("page", page.toString()); // Add page
+      apiParams.append("limit", productsPerPage.toString()); // Add limit
 
-    // Update URL without navigation (optional, good for shareable links)
-    // window.history.pushState(null, '', `?${params.toString()}`);
+      // Update URL without navigation (optional, good for shareable links)
+      // window.history.pushState(null, '', `?${params.toString()}`);
 
-    try {
-      const response = await fetch(`/api/products/search?${apiParams.toString()}`); // Fix: Use apiParams here
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      try {
+        const response = await fetch(
+          `/api/products/search?${apiParams.toString()}`
+        ); // Fix: Use apiParams here
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        // Assuming API returns { products: Product[], totalCount: number }
+        const data: { products: Product[]; totalCount: number } =
+          await response.json();
+        setProducts(data.products);
+        setTotalPages(Math.ceil(data.totalCount / productsPerPage));
+        // Update current page state based on the page we actually fetched for
+        setCurrentPage(page);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        setProducts([]);
+      } finally {
+        setIsLoading(false);
       }
-      // Assuming API returns { products: Product[], totalCount: number }
-      const data: { products: Product[]; totalCount: number } = await response.json();
-      setProducts(data.products);
-      setTotalPages(Math.ceil(data.totalCount / productsPerPage));
-      // Update current page state based on the page we actually fetched for
-      setCurrentPage(page);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      setProducts([]);
-    } finally {
-      setIsLoading(false);
-    }
-  // Only depend on stable values or things that change how fetching works fundamentally
-  }, [productsPerPage]);
+      // Only depend on stable values or things that change how fetching works fundamentally
+    },
+    [productsPerPage]
+  );
 
   // Fetch products when search params change or on initial load
   useEffect(() => {
@@ -157,6 +206,12 @@ function ProductsPageContent() {
     // Pass the current searchParams object to fetchProducts
     fetchProducts(searchParams, pageFromUrl);
   }, [fetchProducts, searchParams]); // Keep dependencies
+
+  useEffect(() => {
+    debouncedSearch();
+    // Cleanup function to cancel debounced calls
+    return () => debouncedSearch.cancel();
+  }, [searchTerm, category, minPrice, maxPrice, debouncedSearch]);
 
   // Update state if URL search params change (e.g., browser back/forward)
   useEffect(() => {
@@ -185,13 +240,23 @@ function ProductsPageContent() {
     // fetchProducts will be triggered by the useEffect watching searchParams
   };
 
+  // const handleReset = () => {
+  //   setSearchTerm("");
+  //   setCategory("all"); // Reset to "all"
+  //   setMinPrice("");
+  //   setMaxPrice("");
+  //   setCurrentPage(1); // Reset page state
+  //   // Update URL (clear params) and trigger fetch via useEffect
+  //   router.push(window.location.pathname, { scroll: false });
+  // };
+
   const handleReset = () => {
     setSearchTerm("");
-    setCategory("all"); // Reset to "all"
+    setCategory("all");
     setMinPrice("");
     setMaxPrice("");
-    setCurrentPage(1); // Reset page state
-    // Update URL (clear params) and trigger fetch via useEffect
+    setCurrentPage(1);
+    // The URL will be updated by the useEffect watching the state variables
     router.push(window.location.pathname, { scroll: false });
   };
 
@@ -312,7 +377,7 @@ function ProductsPageContent() {
       <main className="flex-1 container mx-auto py-8 px-4 flex flex-col lg:flex-row gap-8">
         {/* Search Form */}
         <aside className="w-full lg:w-64 xl:w-72 flex-shrink-0 lg:sticky lg:top-20 h-fit lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto bg-card lg:bg-transparent lg:dark:bg-zinc-900 rounded-lg p-6 border lg:border-0 dark:border-zinc-700">
-          <form onSubmit={handleSearch} className="space-y-6">
+          <div className="space-y-6">
             <h2 className="text-lg font-semibold mb-4 text-card-foreground lg:text-foreground">
               Filter Products
             </h2>
@@ -350,8 +415,7 @@ function ProductsPageContent() {
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>{" "}
-                  {/* Use "all" */}
+                  <SelectItem value="all">All Categories</SelectItem>
                   {categoryEnum.enumValues.map((cat) => (
                     <SelectItem key={cat} value={cat}>
                       {cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -397,14 +461,8 @@ function ProductsPageContent() {
               />
             </div>
 
-            {/* Action Buttons */}
+            {/* Reset button only - Search is automatic */}
             <div className="flex gap-2 md:col-span-1 items-end">
-              <Button
-                type="submit"
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-              >
-                Search
-              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -414,7 +472,7 @@ function ProductsPageContent() {
                 Reset
               </Button>
             </div>
-          </form>
+          </div>
         </aside>
 
         {/* --- Main Content Area --- */}
@@ -438,7 +496,9 @@ function ProductsPageContent() {
                         handlePageChange(currentPage - 1);
                       }}
                       aria-disabled={currentPage <= 1}
-                      className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                      className={
+                        currentPage <= 1 ? "pointer-events-none opacity-50" : ""
+                      }
                     />
                   </PaginationItem>
                   {/* Simple Page Number Display - Can be enhanced */}
@@ -467,7 +527,11 @@ function ProductsPageContent() {
                         handlePageChange(currentPage + 1);
                       }}
                       aria-disabled={currentPage >= totalPages}
-                      className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+                      className={
+                        currentPage >= totalPages
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
                     />
                   </PaginationItem>
                 </PaginationContent>
