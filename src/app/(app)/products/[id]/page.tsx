@@ -358,14 +358,14 @@ export default function ProductDetail() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
           {/* Product Image */}
           <div className="md:col-span-1 flex justify-center">
-            <div className="relative h-96 w-full max-w-md overflow-hidden rounded-lg bg-white/5 backdrop-blur-sm border border-white/10">
+            <div className="relative h-[512px] w-full max-w-lg overflow-hidden rounded-lg bg-white/5 backdrop-blur-sm border border-white/10">
               {product.image_url ? (
                 <Image
                   src={product.image_url}
                   alt={product.name}
                   fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  style={{ objectFit: "contain" }}
+                  // sizes="(max-width: 768px) 100vw, 50vw"
+                  // style={{ objectFit: "contain" }}
                   priority
                 />
               ) : (
@@ -388,7 +388,7 @@ export default function ProductDetail() {
                 </span>
               </div>
               <p className="text-xl font-semibold mb-1">
-                ${(product.price).toFixed(2)}
+                ${product.price.toFixed(2)}
               </p>
               <p className="text-sm">
                 Category: <span className="capitalize">{product.category}</span>
@@ -397,7 +397,7 @@ export default function ProductDetail() {
 
             <div>
               <h2 className="text-xl font-semibold mb-2">Description</h2>
-              <p className="text-gray-200 dark:text-gray-300">
+              <p className="text-gray-200 dark:text-gray-300 whitespace-pre-wrap">
                 {product.description}
               </p>
             </div>
