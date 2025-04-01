@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/index";
 import { Farmers, Products, Users, Orders, OrderItems } from "@/db/schema";
 import { eq, inArray, sql } from "drizzle-orm"; // Removed unused 'extract'
+import { User } from "@/types/users";
+import { OrderItem } from "@/types/order-items";
 
-export async function GET(
-  { params }: { params: { id: string } }
-) {
+export async function GET({ params }: { params: { id: string } }) {
   try {
     const { id: farmerUserId } = await params;
 
@@ -42,7 +42,22 @@ export async function GET(
 
     const productIds = farmerProducts.map((p) => p.product_id);
 
-    let ordersData: any[] = [];
+    type OrderStatus = "pending" | "completed" | "cancelled" | "shipped" | null;
+
+    interface OrderData {
+      order_id: string;
+      user_id: string | null;
+      total_price: number | null;
+      status: OrderStatus;
+      shipping_address: string | null;
+      created_at: Date | null; 
+      updated_at: Date | null;
+
+      // Relations
+      user?: User;
+      orderItems?: OrderItem[];
+    }
+    const ordersData: OrderData[] = [];
     let totalCustomers = 0;
     let totalRevenue = 0;
 
@@ -102,7 +117,7 @@ export async function GET(
           })
         );
 
-        ordersData = ordersWithItems; // Assign orders with items
+        const ordersData = ordersWithItems; // Assign orders with items
 
         totalCustomers = new Set(ordersData.map((order) => order.user_id)).size;
         totalRevenue = ordersData.reduce(
@@ -179,7 +194,7 @@ export async function GET(
         totalProducts,
         totalOrders,
         totalCustomers,
-        totalRevenue: totalRevenue // Convert cents to dollars for consistency
+        totalRevenue: totalRevenue, // Convert cents to dollars for consistency
       },
       monthlySales: formattedMonthlySales, // Include the formatted monthly sales data
     });
