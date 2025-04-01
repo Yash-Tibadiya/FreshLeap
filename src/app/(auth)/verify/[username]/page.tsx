@@ -183,8 +183,8 @@ export default function VerifyEmail({ params }: { params: Promise<{ username: st
                 Verify Your Email
               </h1>
               <p className="text-base text-gray-600 dark:text-gray-400">
-                We've sent a verification code to your email address. Please
-                enter it below to verify your account.
+                We&apos;ve sent a verification code to your email address.
+                Please enter it below to verify your account.
               </p>
             </div>
 
@@ -252,7 +252,7 @@ export default function VerifyEmail({ params }: { params: Promise<{ username: st
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Didn't receive the code?{" "}
+                Didn&apos;t receive the code?{" "}
                 <button
                   type="button"
                   onClick={handleResendCode}

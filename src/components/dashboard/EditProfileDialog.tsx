@@ -63,8 +63,6 @@ export function EditProfileDialog({
         throw new Error(errorData.message || "Failed to update profile");
       }
 
-      const data = await response.json();
-
       // Update the farmer data in the parent component
       onProfileUpdate({
         ...farmer,
@@ -89,7 +87,7 @@ export function EditProfileDialog({
         <DialogHeader>
           <DialogTitle>Edit Farm Profile</DialogTitle>
           <DialogDescription>
-            Update your farm details below. Click save when you're done.
+            Update your farm details below. Click save when you&apos;re done.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>

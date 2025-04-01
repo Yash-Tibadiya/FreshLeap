@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { useSession } from "next-auth/react";
 
 // Import extracted components
 import {
@@ -197,7 +196,7 @@ export default function FarmerDashboardClient({
       <div className="flex flex-col items-center justify-center min-h-screen">
         <h1 className="text-2xl font-bold mb-4">Farmer Not Found</h1>
         <p className="text-gray-500 mb-6">
-          The farmer you're looking for doesn't exist.
+          The farmer you&apos;re looking for doesn&apos;t exist.
         </p>
         <Button onClick={() => router.push("/")}>Go Home</Button>
       </div>

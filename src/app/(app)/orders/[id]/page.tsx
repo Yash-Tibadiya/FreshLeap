@@ -172,7 +172,7 @@ export default function OrdersPage() {
           <ShoppingBag className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2">No orders found</h2>
           <p className="text-gray-500 dark:text-gray-400 mb-6">
-            You haven't placed any orders yet.
+            You haven&apos;t placed any orders yet.
           </p>
           <Button onClick={() => router.push("/")}>Start Shopping</Button>
         </div>

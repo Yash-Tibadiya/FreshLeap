@@ -78,14 +78,8 @@ export function SalesChart({ monthlySales = [] }: SalesChartProps) {
     };
   }, [chartData]);
 
-  // Determine if we have real data or just sample data
-  const hasData =
-    monthlySales &&
-    monthlySales.length > 0 &&
-    monthlySales.some((item) => item.sales > 0);
-
   // Handle mouse events for hover effect
-  const handleMouseEnter = (data: any, index: number) => {
+  const handleMouseEnter = ( index: number) => {
     setActiveIndex(index);
   };
 

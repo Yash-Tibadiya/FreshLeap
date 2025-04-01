@@ -13,7 +13,7 @@ async function sendPasswordResetEmail(email: string, username: string, resetToke
   try {
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
     
-    const { data, error } = await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: "FreshLeap <dev@yash14.me>", // Use Resend's default domain for development
       to: email,
       subject: "Reset Your Password - FreshLeap",

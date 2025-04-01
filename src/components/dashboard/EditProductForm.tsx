@@ -56,7 +56,10 @@ const productSchema = z.object({
   category: z.enum(categoryEnum.enumValues),
   description: z.string().min(10, "Description must be at least 10 characters"),
   price: z.coerce.number().positive("Price must be a positive number"),
-  quantity_available: z.coerce.number().int().nonnegative("Quantity must be a non-negative integer"),
+  quantity_available: z.coerce
+    .number()
+    .int()
+    .nonnegative("Quantity must be a non-negative integer"),
   image: z.instanceof(File).optional().nullable(), // Allow optional image update
 });
 
@@ -77,10 +80,12 @@ export function EditProductForm({
   onSubmitSuccess,
   onCancel,
   isOpen,
-  onOpenChange
+  onOpenChange,
 }: EditProductFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(product.image_url);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    product.image_url
+  );
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -92,7 +97,7 @@ export function EditProductForm({
     if (product) {
       form.reset({
         name: product.name,
-        category: product.category as typeof categoryEnum.enumValues[number],
+        category: product.category as (typeof categoryEnum.enumValues)[number],
         description: product.description,
         price: product.price,
         quantity_available: product.quantity_available,
@@ -113,7 +118,6 @@ export function EditProductForm({
     }
   };
 
-
   const onSubmit = async (values: ProductFormData) => {
     setIsSubmitting(true);
     const formData = new FormData();
@@ -132,7 +136,8 @@ export function EditProductForm({
     // The current backend seems to handle optional image updates correctly.
 
     try {
-      const response = await fetch(`/api/product`, { // Use the main product endpoint
+      const response = await fetch(`/api/product`, {
+        // Use the main product endpoint
         method: "PUT",
         body: formData, // Send as multipart/form-data
       });
@@ -148,7 +153,9 @@ export function EditProductForm({
       onOpenChange(false); // Close dialog on success
     } catch (error: any) {
       console.error("Error updating product:", error);
-      toast.error(error.message || "An error occurred while updating the product.");
+      toast.error(
+        error.message || "An error occurred while updating the product."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -164,14 +171,13 @@ export function EditProductForm({
     onOpenChange(open); // Propagate state change
   };
 
-
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[625px] bg-white dark:bg-zinc-900">
         <DialogHeader>
           <DialogTitle>Edit Product</DialogTitle>
           <DialogDescription>
-            Update the details for "{product.name}".
+            Update the details for &quot;{product.name}&quot;.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 max-h-[calc(100vh-14rem)] overflow-y-auto no-scrollbar pr-2">
@@ -200,9 +206,7 @@ export function EditProductForm({
               <FormField
                 control={form.control}
                 name="image"
-                render={(
-                  { field } // Destructure field to exclude value, onChange etc. if handled manually
-                ) => (
+                render={() => (
                   <FormItem>
                     <FormLabel>Update Product Image (Optional)</FormLabel>
                     <FormControl>

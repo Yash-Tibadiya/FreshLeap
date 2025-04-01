@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const products = await db.select().from(Products);
     return NextResponse.json({ products }, { status: 200 });
@@ -327,12 +327,6 @@ export async function DELETE(request: NextRequest) {
         { status: 404 }
       );
     }
-    
-    // Delete the product from database
-    const deletedProduct = await db
-      .delete(Products)
-      .where(eq(Products.product_id, product_id))
-      .returning();
     
     // Delete associated image if exists
     const imageUrl = product[0].image_url;

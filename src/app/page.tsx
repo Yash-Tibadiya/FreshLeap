@@ -4,7 +4,6 @@ import { Products } from "@/db/schema";
 import Navbar from "@/components/Navbar";
 import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ShoppingBasket, Truck, Users, Sparkles } from "lucide-react";
 import Link from "next/link";

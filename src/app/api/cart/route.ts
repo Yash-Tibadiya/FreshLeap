@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user has a cart, if not create one
-    let cart = await db
+    const cart = await db
       .select()
       .from(Carts)
       .where(eq(Carts.user_id, user_id));

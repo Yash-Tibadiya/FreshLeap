@@ -215,24 +215,6 @@ function ProductsPageContent() {
     setCurrentPage(Number(searchParams.get("page")) || 1); // Update page state from URL
   }, [searchParams]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Update URL search params, which triggers useEffect -> fetchProducts
-    const params = new URLSearchParams(window.location.search);
-    if (searchTerm) params.set("name", searchTerm);
-    else params.delete("name");
-    if (category && category !== "all") params.set("category", category);
-    else params.delete("category"); // Adjust logic for "all"
-    if (minPrice) params.set("minPrice", minPrice);
-    else params.delete("minPrice");
-    if (maxPrice) params.set("maxPrice", maxPrice);
-    else params.delete("maxPrice");
-    params.set("page", "1"); // Reset to page 1 on new search/filter
-    // Use router.push for Next.js App Router to trigger updates
-    router.push(`?${params.toString()}`, { scroll: false });
-    // fetchProducts will be triggered by the useEffect watching searchParams
-  };
-
   const handleReset = () => {
     setSearchTerm("");
     setCategory("all");
