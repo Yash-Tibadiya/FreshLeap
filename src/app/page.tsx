@@ -12,6 +12,8 @@ import { Cover } from "@/components/ui/cover";
 import { Feature197 } from "@/components/accordion-feature-section";
 import { RetroGrid } from "@/components/ui/retro-grid";
 import { WorldMapB } from "@/components/WorldMap";
+import Image from "next/image"; // Import Image
+import { Facebook, Instagram, Linkedin, Twitter } from "lucide-react";
 
 const demoData = {
   features: [
@@ -140,7 +142,7 @@ export default async function Home() {
                 </p>
               </div>
             </div>
-            {/* <RetroGrid /> */}
+            <RetroGrid />
           </div>
         </section>
 
@@ -264,16 +266,228 @@ export default async function Home() {
               </div>
             </div>
           </section>
-{/* 
+          
           <section>
             <Feature197 {...demoData} />
-          </section> */}
+          </section>
 
-          {/* <section>
+          <section>
             <WorldMapB />
-          </section> */}
+          </section>
         </main>
-        <Footer />
+
+        <footer className="border-t py-12 md:py-16 bg-black/30">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              {/* Column 1: Logo, Description, Social Links */}
+              <div className="space-y-3">
+                {/* Logo replaces H3 */}
+                <Link
+                  href="/"
+                  aria-label="home"
+                  className="flex items-center space-x-2"
+                >
+                  <Image
+                    src="/images/logobgr.png"
+                    alt="FreshLeap Logo" // Updated alt text
+                    width={44}
+                    height={44}
+                    className="rounded-lg"
+                    priority
+                  />
+                  <span className="font-bold text-2xl text-green-200 dark:text-green-600">
+                    FreshLeap
+                  </span>
+                </Link>
+                <p className="text-muted-foreground">
+                  Connecting farmers and consumers directly.
+                </p>
+                <div className="flex space-x-4 pt-2">
+                  <Link
+                    href="#" // Keep as # or add your actual Facebook URL
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    target="_blank" // Optional: Open social links in new tab
+                    rel="noopener noreferrer" // Optional: Security best practice
+                  >
+                    <Facebook size={20} />
+                    <span className="sr-only">Facebook</span>
+                  </Link>
+                  <Link
+                    href="#" // Keep as # or add your actual Instagram URL
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Instagram size={20} />
+                    <span className="sr-only">Instagram</span>
+                  </Link>
+                  <Link
+                    href="#" // Keep as # or add your actual Twitter URL
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Twitter size={20} />
+                    <span className="sr-only">Twitter</span>
+                  </Link>
+                  <Link
+                    href="#" // Keep as # or add your actual LinkedIn URL
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Linkedin size={20} />
+                    <span className="sr-only">LinkedIn</span>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Column 2: Company Links */}
+              <div>
+                <h4 className="font-medium text-base mb-4">Company</h4>
+                <ul className="space-y-2">
+                  <li>
+                    <Link
+                      href="/about" // Placeholder - create this page or link to '/'
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      About Us
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/mission" // Placeholder - create this page or link to '/'
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Our Mission
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/careers" // Placeholder - create this page or link to '/'
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Careers
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/press" // Placeholder - create this page or link to '/'
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Press
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Column 3: For Farmers Links */}
+              <div>
+                <h4 className="font-medium text-base mb-4">For Farmers</h4>
+                <ul className="space-y-2">
+                  <li>
+                    <Link
+                      href="/sign-up" // Assuming sign-up is for farmers too, adjust if needed
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Join as Producer
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/pricing" // Placeholder - create this page or link to '/'
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Pricing
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/farmer-resources" // Placeholder - create this page or link to '/'
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Resources
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/success-stories" // Placeholder - create this page or link to '/'
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Success Stories
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Column 4: For Consumers Links */}
+              <div>
+                <h4 className="font-medium text-base mb-4">For Consumers</h4>
+                <ul className="space-y-2">
+                  <li>
+                    <Link
+                      href="/how-it-works" // Placeholder - create this page or link to '/'
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      How It Works
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/products" // Links to the main products page
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Find Local Produce
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/seasonal-guide" // Placeholder - create this page or link to '/products'
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Seasonal Guide
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/support" // Placeholder - create this page or link to '/'
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Support
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Bottom Section: Copyright and Legal Links */}
+            <div className="flex flex-col md:flex-row justify-between items-center mt-12 pt-8 border-t">
+              <p className="text-sm text-muted-foreground">
+                © {new Date().getFullYear()} FreshLeap. All rights reserved.
+              </p>
+              <div className="flex gap-6 mt-4 md:mt-0">
+                <Link
+                  href="/privacy-policy" // Placeholder - create this page
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+                <Link
+                  href="/terms-of-service" // Placeholder - create this page
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Terms of Service
+                </Link>
+                <Link
+                  href="/cookie-policy" // Placeholder - create this page
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Cookie Policy
+                </Link>
+              </div>
+            </div>
+          </div>
+        </footer>
       </div>
     </>
   );
