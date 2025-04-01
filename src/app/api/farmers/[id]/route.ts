@@ -4,7 +4,6 @@ import { Farmers, Products, Users, Orders, OrderItems } from "@/db/schema";
 import { eq, inArray, sql } from "drizzle-orm"; // Removed unused 'extract'
 
 export async function GET(
-  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {

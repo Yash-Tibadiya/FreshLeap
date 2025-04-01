@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -122,8 +122,8 @@ function ProductsPageContent() {
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
 
   // Create a debounced search function that will update URL params
-  const debouncedSearch = useCallback(
-    debounce(() => {
+  const debouncedSearch = useMemo(
+    () => debounce(() => {
       const params = new URLSearchParams(window.location.search);
 
       if (searchTerm) params.set("name", searchTerm);

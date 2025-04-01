@@ -8,10 +8,20 @@ import { eq } from "drizzle-orm";
 // Initialize Stripe with the secret key
 const stripe = new Stripe(process.env.STRIPE_PRIVATE_KEY!);
 
+// Define the expected request body structure
+interface CheckoutRequestBody {
+  lineItems: Stripe.Checkout.SessionCreateParams.LineItem[];
+  metadata?: {
+    userId?: string;
+    // Allow other potential metadata keys
+    [key: string]: any;
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // Parse the request body
-    const body = await request.json();
+    // Parse the request body with the defined type
+    const body: CheckoutRequestBody = await request.json();
     const { lineItems, metadata } = body;
 
     // Create a Stripe Checkout Session
@@ -34,10 +44,12 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ sessionId: session.id });
-  } catch (error: any) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: unknown) {
     console.error("Checkout session creation error:", error);
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
     return NextResponse.json(
-      { message: "Failed to create checkout session", error: error.message },
+      { message: "Failed to create checkout session", error: errorMessage },
       { status: 500 }
     );
   }
@@ -182,13 +194,15 @@ export async function GET(request: NextRequest) {
       orderNumber: order_id,
       message: "Order created successfully",
     });
-  } catch (error: any) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: unknown) {
     console.error("Order verification and creation error:", error);
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
     return NextResponse.json(
       {
         success: false,
         message: "Failed to verify and create order",
-        error: error.message,
+        error: errorMessage,
       },
       { status: 500 }
     );

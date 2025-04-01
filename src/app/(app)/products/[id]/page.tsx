@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
@@ -138,7 +138,7 @@ export default function ProductDetail() {
     fetchProductDetails();
   }, [params.id]);
 
-  const fetchProductReviews = async () => {
+  const fetchProductReviews = useCallback(async () => {
     if (!params.id) return;
 
     try {
@@ -178,13 +178,13 @@ export default function ProductDetail() {
     } catch (error) {
       console.error("Error fetching reviews:", error);
     }
-  };
+  }, [params.id, session?.user?.id]); // Dependencies for useCallback
 
   useEffect(() => {
     if (product) {
       fetchProductReviews();
     }
-  }, [params.id, session?.user?.id, product]);
+  }, [product, fetchProductReviews]); // Use memoized function in useEffect dependencies
 
   // Handle "Add to Cart" button click
   const handleAddToCart = (e: React.MouseEvent) => {
