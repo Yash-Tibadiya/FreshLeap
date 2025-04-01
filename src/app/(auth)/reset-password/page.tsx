@@ -17,25 +17,48 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 // Form validation schema
-const resetPasswordSchema = z.object({
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+const resetPasswordSchema = z
+  .object({
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
-export default function ResetPassword() {
+// Loading state component
+function ResetPasswordLoading() {
+  return (
+    <div className="relative flex min-h-screen transition-colors duration-300 bg-white dark:bg-black dark:bg-gradient-to-tr bg-gradient-to-tr from-white to-green-950 dark:from-black dark:to-green-900 overflow-hidden">
+      <div className="flex flex-col items-center justify-center w-full p-4 sm:p-8 md:p-12 z-10">
+        <div className="w-full max-w-md space-y-8 text-center">
+          <div className="animate-pulse">
+            <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+              Loading...
+            </h2>
+            <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+              Please wait while we prepare the password reset form.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Main content component that uses useSearchParams
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tokenValid, setTokenValid] = useState<boolean | null>(null);
   const [tokenChecking, setTokenChecking] = useState(true);
@@ -56,7 +79,9 @@ export default function ResetPassword() {
     const verifyToken = async () => {
       if (!token) {
         setTokenValid(false);
-        setApiError("Invalid or missing reset token. Please request a new password reset link.");
+        setApiError(
+          "Invalid or missing reset token. Please request a new password reset link."
+        );
         setTokenChecking(false);
         return;
       }
@@ -65,22 +90,27 @@ export default function ResetPassword() {
         const response = await fetch(`/api/verify-reset-token?token=${token}`, {
           method: "GET",
         });
-        
+
         const data = await response.json();
-        
+
         if (!response.ok) {
           setTokenValid(false);
-          setApiError(data.message || "Invalid or expired reset token. Please request a new password reset link.");
+          setApiError(
+            data.message ||
+              "Invalid or expired reset token. Please request a new password reset link."
+          );
           setTokenChecking(false);
           return;
         }
-        
+
         setTokenValid(true);
         setTokenChecking(false);
       } catch (error) {
         console.error("Token verification error:", error);
         setTokenValid(false);
-        setApiError("An error occurred while verifying the reset token. Please try again.");
+        setApiError(
+          "An error occurred while verifying the reset token. Please try again."
+        );
         setTokenChecking(false);
       }
     };
@@ -92,15 +122,16 @@ export default function ResetPassword() {
     setIsSubmitting(true);
     setApiError(null);
     setSuccess(null);
-    
+
     if (!token) {
       toast.error("Reset failed", {
-        description: "Reset token is missing. Please request a new password reset link.",
+        description:
+          "Reset token is missing. Please request a new password reset link.",
       });
       setIsSubmitting(false);
       return;
     }
-    
+
     try {
       // Send request to reset-password API
       const response = await fetch("/api/reset-password", {
@@ -113,23 +144,27 @@ export default function ResetPassword() {
           password: data.password,
         }),
       });
-      
+
       const responseData = await response.json();
-      
+
       if (!response.ok) {
         toast.error("Reset failed", {
-          description: responseData.message || "Failed to reset password. Please try again.",
+          description:
+            responseData.message ||
+            "Failed to reset password. Please try again.",
         });
         setIsSubmitting(false);
         return;
       }
-      
+
       // Successfully reset password
-      setSuccess("Your password has been reset successfully! Redirecting to sign in...");
+      setSuccess(
+        "Your password has been reset successfully! Redirecting to sign in..."
+      );
       toast.success("Password reset", {
         description: "Your password has been reset successfully!",
       });
-      
+
       // Redirect to sign-in page after a short delay
       setTimeout(() => {
         router.push("/sign-in");
@@ -174,13 +209,14 @@ export default function ResetPassword() {
                 Invalid Reset Link
               </h2>
               <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-                {apiError || "The password reset link is invalid or has expired."}
+                {apiError ||
+                  "The password reset link is invalid or has expired."}
               </p>
             </div>
-            
+
             <div className="mt-4 text-center">
-              <Link 
-                href="/forgot-password" 
+              <Link
+                href="/forgot-password"
                 className="font-medium text-green-600 hover:text-green-500 dark:text-green-400 dark:hover:text-green-300"
               >
                 Request a new password reset link
@@ -335,5 +371,14 @@ export default function ResetPassword() {
         </div>
       </div>
     </>
+  );
+}
+
+// Main component that wraps content with Suspense
+export default function ResetPassword() {
+  return (
+    <Suspense fallback={<ResetPasswordLoading />}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

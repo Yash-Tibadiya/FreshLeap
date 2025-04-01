@@ -7,6 +7,7 @@ import { Loader2, Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Suspense } from "react";
 
 import {
   Form,
@@ -29,7 +30,8 @@ const signInSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-export default function SignIn() {
+// Create a separate component that uses useSearchParams
+function SignInContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -46,14 +48,14 @@ export default function SignIn() {
 
   const onSubmit = async (data: z.infer<typeof signInSchema>) => {
     setIsSubmitting(true);
-    
+
     try {
       const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
         redirect: false,
       });
-      
+
       if (result?.error) {
         toast.error("Sign in failed", {
           description: "Incorrect email or password",
@@ -61,12 +63,12 @@ export default function SignIn() {
         setIsSubmitting(false);
         return;
       }
-      
+
       // Successful sign-in
       toast.success("Signed in successfully", {
         description: "Welcome back!",
       });
-      
+
       router.push(callbackUrl);
       router.refresh();
     } catch (error) {
@@ -226,5 +228,20 @@ export default function SignIn() {
         </div>
       </div>
     </>
+  );
+}
+
+// Main component that wraps with Suspense
+export default function SignIn() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+        </div>
+      }
+    >
+      <SignInContent />
+    </Suspense>
   );
 }
