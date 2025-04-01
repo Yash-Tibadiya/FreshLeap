@@ -15,6 +15,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
+import { Cover } from "@/components/ui/cover";
 
 // Loading skeleton for products
 function ProductSkeleton() {
@@ -120,6 +121,15 @@ export default async function Home() {
               <ProductsGrid products={products} />
             </Suspense>
           </section>
+
+          <section className="mb-12 py-20">
+            <div>
+              <h1 className="text-4xl md:text-4xl lg:text-6xl font-semibold max-w-7xl mx-auto text-center mt-6 relative z-20 py-6 bg-clip-text text-transparent bg-gradient-to-b from-neutral-800 via-neutral-700 to-neutral-700 dark:from-neutral-800 dark:via-white dark:to-white">
+                Get Fresh Products <br /> at <Cover>warp speed</Cover>
+              </h1>
+            </div>
+          </section>
+
           {/* Key Features Section */}
           <section className="py-16 px-4 bg-green-50/50 dark:bg-green-950/30 backdrop-blur/20 rounded-3xl">
             <div className="container mx-auto max-w-6xl">
