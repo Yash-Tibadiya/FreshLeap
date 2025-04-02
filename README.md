@@ -3,6 +3,11 @@
 FreshLeap is a digital platform connecting consumers directly with local farmers, making it easy to browse and purchase fresh, locally-grown produce. The platform supports local agriculture while providing consumers with access to fresh, locally sourced food.
 
 <img src="public/images/logobgr.png" alt="FreshLeap" width="75" height="auto">
+<img src="https://img.enacton.com/ShareX/2025/04/chrome_1QvaAAm8J8.png" alt="FreshLeap" width="auto" height="auto">
+<img src="https://img.enacton.com/ShareX/2025/04/chrome_k3ZlD6LZrx.png" alt="FreshLeap" width="auto" height="auto">
+<img src="https://img.enacton.com/ShareX/2025/04/chrome_VUrGJXdXxj.png" alt="FreshLeap" width="auto" height="auto">
+<img src="https://img.enacton.com/ShareX/2025/04/chrome_yTtdt6e8EK.png" alt="FreshLeap" width="auto" height="auto">
+<img src="https://img.enacton.com/ShareX/2025/04/chrome_xGgAGq0Crj.png" alt="FreshLeap" width="auto" height="auto">
 
 
 ## 🌱 Features
