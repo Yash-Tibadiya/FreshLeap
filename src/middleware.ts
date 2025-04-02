@@ -1,103 +1,88 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { NextRequestWithAuth } from "next-auth/middleware";
 
-// Define public routes that don't require authentication
-const publicRoutes = [
-  "/",
-  "/products",
-  "/checkout/success",
-  "/checkout/cancel",
-];
+// This function handles route protection and redirection based on authentication status and role
+export async function middleware(request: NextRequest) {
+  const token = await getToken({ req: request });
+  const url = request.nextUrl;
+  const path = url.pathname;
 
-// Define authentication routes that should redirect to home if user is already logged in
-const authRoutes = [
-  "/sign-up",
-  "/sign-in",
-  "/verify",
-  "/forgot-password",
-  "/reset-password",
-];
+  // Auth routes that should redirect to dashboard if user is already logged in
+  const authRoutes = [
+    "/sign-in",
+    "/sign-up",
+    "/forgot-password",
+    "/reset-password",
+    "/verify",
+  ];
 
-export default async function middleware(req: NextRequestWithAuth) {
-  const pathname = req.nextUrl.pathname;
+  // Protected routes that require authentication
+  const protectedRoutes = ["/dashboard", "/checkout", "/orders"];
 
-  // Get the user's token
-  const token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
+  // Dashboard routes - only for farmers
+  const farmerOnlyRoutes = ["/dashboard"];
 
-  // Check if the route is a public route or a product detail page
-  const isPublicRoute =
-    publicRoutes.includes(pathname) || pathname.match(/^\/products\/[\w-]+$/);
+  // If user is logged in
+  if (token) {
+    const userRole = token.role as string;
 
-  // Check if it's an API route
-  const isApiRoute = pathname.startsWith("/api/");
-
-  // Skip middleware for public routes and API routes
-  if (isPublicRoute || isApiRoute) {
-    return NextResponse.next();
-  }
-
-  // If user is authenticated and trying to access auth routes, redirect to home
-  if (token && authRoutes.some((route) => pathname === route)) {
-    return NextResponse.redirect(new URL("/", req.url));
-  }
-
-  // If no token and trying to access a protected route, redirect to sign-in
-  if (!token && !isPublicRoute && !isApiRoute) {
-    const url = new URL("/sign-in", req.url);
-    url.searchParams.set("callbackUrl", encodeURI(pathname));
-    return NextResponse.redirect(url);
-  }
-
-  // Check if user is verified
-  if (token && !token.isVerified && !pathname.startsWith("/verify")) {
-    return NextResponse.redirect(new URL("/verify", req.url));
-  }
-
-  // Role-based access control for dashboard
-  if (token && token.role === "farmer" && pathname === "/dashboard") {
-    return NextResponse.redirect(
-      new URL(`/dashboard/farmer/${token.id}`, req.url)
+    // Check if the current path is an auth route or starts with any auth route path
+    const isAuthRoute = authRoutes.some(
+      (route) => path === route || path.startsWith(`${route}/`)
     );
+
+    if (isAuthRoute) {
+      // Redirect to dashboard if user is a farmer
+      if (userRole === "farmer") {
+        return NextResponse.redirect(new URL("/dashboard", request.url));
+      }
+      // Redirect to homepage if user is a customer
+      else if (userRole === "customer") {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+    }
+
+    // Check if customer is trying to access farmer-only routes
+    if (userRole === "customer") {
+      const isFarmerOnlyRoute = farmerOnlyRoutes.some(
+        (route) => path === route || path.startsWith(`${route}/`)
+      );
+
+      if (isFarmerOnlyRoute) {
+        // Redirect customers away from dashboard to homepage
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+    }
+  }
+  // If user is not logged in and trying to access protected routes, redirect to sign-in
+  else {
+    const isProtectedRoute = protectedRoutes.some(
+      (route) => path === route || path.startsWith(`${route}/`)
+    );
+
+    if (isProtectedRoute) {
+      // Redirect to sign-in if user is not authenticated
+      return NextResponse.redirect(new URL("/sign-in", request.url));
+    }
   }
 
-  // Role-specific routes protection
-  if (
-    token &&
-    pathname.startsWith("/dashboard/farmer") &&
-    token.role !== "farmer"
-  ) {
-    return NextResponse.redirect(new URL("/unauthorized", req.url));
-  }
-
-  if (token && pathname.startsWith("/orders") && token.role !== "customer") {
-    return NextResponse.redirect(new URL("/unauthorized", req.url));
-  }
-
-  // If all checks pass, proceed to the requested page
+  // Continue with the request for non-protected routes or authorized users
   return NextResponse.next();
 }
 
-// Configure which routes this middleware should run on
+// Define the paths that the middleware should run on
 export const config = {
   matcher: [
-    // Authentication routes
-    "/sign-in/:path*",
-    "/sign-up/:path*",
+    // Auth routes
+    "/sign-in",
+    "/sign-up",
+    "/forgot-password",
+    "/reset-password",
     "/verify/:path*",
-    "/forgot-password/:path*",
-    "/reset-password/:path*",
 
-    // Protected app routes
+    // Protected routes
     "/dashboard/:path*",
+    "/checkout/:path*",
     "/orders/:path*",
-
-    // Public routes (we still need middleware for redirecting authenticated users)
-    "/",
-    "/products",
-    "/products/:path*",
   ],
 };
